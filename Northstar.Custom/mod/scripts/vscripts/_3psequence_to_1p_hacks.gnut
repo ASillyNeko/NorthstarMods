@@ -33,10 +33,10 @@ Forced1PSequenceData function FirstPersonSequenceForce1P( FirstPersonSequenceStr
 	player.Hide()
 
 	Forced1PSequenceData cleanupData
+
 	cleanupData.player = player
 
 	vector angles = player.GetAngles()
-
 	entity ownerProxy
 
 	if ( entityclass == FORCE1P_TITAN_ENTITYCLASS )
@@ -352,7 +352,6 @@ void function ModdedAnimEvent_Cloak_On( entity player )
 	float cloakDuration = 1.5 - 0.35
 
 	player.SetCanCloak( true )
-
 	player.SetCloakDuration( 0.35, cloakDuration, 1.0 )
 }
 

@@ -12,7 +12,8 @@ global function SetThreeMinuteMusicID
 global function SetPlayThreeMinuteMusicCheck
 global function SetEpilogueEliminationBased
 global function SetSwitchSidesBased
-global function AddGamemodeGetWinnerDeterminedWait
+global function AddGMGetWinnerDeterminedWait
+global function AddGMThinkFunc
 global function SetForceNoMoreRounds
 global function SetForceNoFinalRoundDraws
 global function SetShouldUseRoundWinningKillReplay
@@ -61,10 +62,11 @@ struct
 	bool endingMatch = false
 	float timeLimitOverride = -1
 	bool shouldPlayThreeMinuteMusic = false
-	float functionref() gamemodeWinnerDeterminedWait
+	float functionref() gmWinnerDeterminedWait
 	int threeMinuteMusicID = eMusicPieceID.GAMEMODE_1
 	bool functionref( int, float ) shouldPlayThreeMinuteMusicCheck = null
 	bool epilogueEliminationBased = true
+	array<void functionref()> gmThinkFuncTable
 } file
 
 /*
@@ -249,6 +251,9 @@ void function CodeCallback_GamerulesThink()
 			GameRulesThink_Postmatch()
 			break
 	}
+
+	foreach ( callbackFunc in file.gmThinkFuncTable )
+		callbackFunc()
 
 	UpdateMatchStateToCode()
 }
@@ -554,9 +559,14 @@ void function SetSwitchSidesBased( bool switchSides )
 	level.nv.switchedSides = switchSides ? 0 : null
 }
 
-void function AddGamemodeGetWinnerDeterminedWait( float functionref() value )
+void function AddGMGetWinnerDeterminedWait( float functionref() value )
 {
-	file.gamemodeWinnerDeterminedWait = value
+	file.gmWinnerDeterminedWait = value
+}
+
+void function AddGMThinkFunc( void functionref() value )
+{
+	file.gmThinkFuncTable.append( value )
 }
 
 void function SetForceNoMoreRounds( bool state )
@@ -2172,8 +2182,8 @@ bool function ShouldClearPlayersInWinnerDetermined()
 
 float function GetWinnerDeterminedWait()
 {
-	if ( file.gamemodeWinnerDeterminedWait != null )
-		return file.gamemodeWinnerDeterminedWait()
+	if ( file.gmWinnerDeterminedWait != null )
+		return file.gmWinnerDeterminedWait()
 
 	if ( IsRoundBased() )
 	{
