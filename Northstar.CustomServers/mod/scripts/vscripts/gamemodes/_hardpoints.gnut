@@ -132,10 +132,10 @@ void function OnHardpointEnter( entity trigger, entity player )
 	// it's just too hard to handle emarking and disemarking with the count stuff
 	HardpointState hpState = GetHardpointState( hp )
 
-	ArrayRemoveInvalid( hpState.capPlayers )
-
 	if ( hpState.capPlayers.find( player ) == -1 )
 		hpState.capPlayers.append( player )
+
+	Hardpoint_ThinkTick( hpState )
 
 	player.SetPlayerNetInt( "playerHardpointID", hp.GetHardpointID() )
 
@@ -154,11 +154,11 @@ void function OnHardpointLeave( entity trigger, entity player )
 	// it's just too hard to handle emarking and disemarking with the count stuff
 	HardpointState hpState = GetHardpointState( hp )
 
-	ArrayRemoveInvalid( hpState.capPlayers )
-
 	int index = hpState.capPlayers.find( player )
 	if ( index != -1 )
 		hpState.capPlayers.fastremove( index )
+
+	Hardpoint_ThinkTick( hpState )
 
 	if ( player.s.isPlayingCapturingSound )
 	{
@@ -254,6 +254,8 @@ void function Hardpoint_ThinkTick( HardpointState hardpoint )
 	int oldTeam = hardpoint.oldTeam
 	float deltaTime = Time() - hardpoint.lastTime
 	table capPower = GetCapPower( hardpoint.ent )
+
+	ArrayRemoveInvalid( hardpoint.capPlayers )
 
 	// I am pretty sure it's just a check for if both teams are present not which one has more
 	if ( capPower.contested )
@@ -642,8 +644,6 @@ void function SetCaptureHardpoint( entity hardpoint, int team, bool playSound )
 	if ( !hardpoint.s.wasJustCapping )
 		return
 
-	ArrayRemoveInvalid( hpState.capPlayers )
-
 	foreach ( entity player in hpState.capPlayers )
 	{
 		// the team check is just for race conditions
@@ -674,8 +674,6 @@ void function SetAmpedHardpoint( entity hardpoint, int team )
 	// was already amped?
 	if ( CapturePoint_GetState( hardpoint ) & CAPTURE_POINT_FLAGS_AMPED )
 		return
-
-	ArrayRemoveInvalid( hpState.capPlayers )
 
 	foreach ( entity player in hpState.capPlayers )
 	{
