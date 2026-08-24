@@ -570,7 +570,7 @@ float function GetScoreRatio()
 {
 	int winningTeam = GetWinningTeam()
 
-	if ( !winningTeam )
+	if ( winningTeam == TEAM_UNASSIGNED )
 		return 1.0
 
 	int winningTeamScore = GameRules_GetTeamScore( winningTeam )
@@ -585,7 +585,7 @@ float function GetScoreNeededRatio()
 {
 	int winningTeam = GetWinningTeam()
 
-	if ( !winningTeam )
+	if ( winningTeam == TEAM_UNASSIGNED )
 		return 1.0
 
 	int scoreLimit = IsRoundBased() ? GetRoundScoreLimit_FromPlaylist() : GetScoreLimit_FromPlaylist()
