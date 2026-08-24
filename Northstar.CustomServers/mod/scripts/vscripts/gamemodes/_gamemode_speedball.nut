@@ -166,10 +166,10 @@ bool function TimelimitCheckFlagHolder()
 	{
 		file.flagCarrier.AddToPlayerGameStat( PGS_ASSAULT_SCORE, 1 )
 
-		SetWinner( file.flagCarrier.GetTeam(), "#GAMEMODE_TIME_LIMIT_REACHED", "#GAMEMODE_TIME_LIMIT_REACHED" )
+		SetWinner( file.flagCarrier.GetTeam(), eWinReason.TIME_LIMIT, "#GAMEMODE_TIME_LIMIT_REACHED", "#GAMEMODE_TIME_LIMIT_REACHED" )
 	}
 	else
-		SetWinner( TEAM_UNASSIGNED, "#GAMEMODE_TIME_LIMIT_REACHED", "#GAMEMODE_TIME_LIMIT_REACHED" )
+		SetWinner( TEAM_UNASSIGNED, eWinReason.TIME_LIMIT, "#GAMEMODE_TIME_LIMIT_REACHED", "#GAMEMODE_TIME_LIMIT_REACHED" )
 
 	return true
 }

@@ -20,6 +20,10 @@ global function SetShouldUseRoundWinningKillReplay
 global function SetRoundWinningKillReplayKillClasses
 global function SetRoundWinningKillReplayEntities
 global function ClearRoundWinningKillReplayEntities
+global function GetGameWonAnnouncement
+global function SetGameWonAnnouncement
+global function GetGameLostAnnouncement
+global function SetGameLostAnnouncement
 global function SetCallback_TryUseProjectileReplay
 global function ShouldTryUseProjectileReplay
 global function SetWinner
@@ -425,16 +429,20 @@ void function AddTeamScore( int team, int amount )
 		level.firstToScoreLimit = team
 }
 
-void function SetWinner( int winningTeam, string winningReason = "", string losingReason = "", bool overrideWinLossReasonForLastRound = true )
+void function SetWinner( int winningTeam, int winReason, string winReasonText, string lossReasonText, bool overrideWinLossReasonForLastRound = true )
 {
-	if ( !GamePlayingOrSuddenDeath() && !level.devForcedWin )
-		return
+	Assert( GamePlayingOrSuddenDeath() || level.devForcedWin )
+
+	svGlobal.winReason = winReason
 
 	if ( ShouldEnterSuddenDeath( winningTeam ) )
 	{
 		SetGameState( eGameState.SuddenDeath )
 		return
 	}
+
+	svGlobal.winReasonText = winReasonText
+	svGlobal.lossReasonText = lossReasonText
 
 	if ( IsRoundBased() )
 	{
@@ -455,18 +463,18 @@ void function SetWinner( int winningTeam, string winningReason = "", string losi
 
 				if ( GameRules_GetTeamScore2( GetMatchWinnerFromScore() ) >= GetRoundScoreLimit_FromPlaylist() )
 				{
-					winningReason = "#GAMEMODE_SCORE_LIMIT_REACHED"
-					losingReason = "#GAMEMODE_SCORE_LIMIT_REACHED"
+					svGlobal.winReasonText = "#GAMEMODE_SCORE_LIMIT_REACHED"
+					svGlobal.lossReasonText = "#GAMEMODE_SCORE_LIMIT_REACHED"
 				}
 				else if ( winningTeam == TEAM_UNASSIGNED )
 				{
-					winningReason = "#GAMEMODE_ROUND_LIMIT_REACHED_ROUND_SCORE_DRAW"
-					losingReason = "#GAMEMODE_ROUND_LIMIT_REACHED_ROUND_SCORE_DRAW"
+					svGlobal.winReasonText = "#GAMEMODE_ROUND_LIMIT_REACHED_ROUND_SCORE_DRAW"
+					svGlobal.lossReasonText = "#GAMEMODE_ROUND_LIMIT_REACHED_ROUND_SCORE_DRAW"
 				}
 				else
 				{
-					winningReason = "#GAMEMODE_ROUND_LIMIT_REACHED_WON_MORE_ROUNDS"
-					losingReason = "#GAMEMODE_ROUND_LIMIT_REACHED_LOSS_MORE_ROUNDS"
+					svGlobal.winReasonText = "#GAMEMODE_ROUND_LIMIT_REACHED_WON_MORE_ROUNDS"
+					svGlobal.lossReasonText = "#GAMEMODE_ROUND_LIMIT_REACHED_LOSS_MORE_ROUNDS"
 				}
 			}
 		}
@@ -477,15 +485,15 @@ void function SetWinner( int winningTeam, string winningReason = "", string losi
 	int announceRoundWinnerWinningSubstr
 	int announceRoundWinnerLosingSubstr
 
-	if ( winningReason == "" )
+	if ( !svGlobal.winReasonText.len() )
 		announceRoundWinnerWinningSubstr = 0
 	else
-		announceRoundWinnerWinningSubstr = GetStringID( winningReason )
+		announceRoundWinnerWinningSubstr = GetStringID( svGlobal.winReasonText )
 
-	if ( losingReason == "" )
+	if ( !svGlobal.lossReasonText.len() )
 		announceRoundWinnerLosingSubstr = 0
 	else
-		announceRoundWinnerLosingSubstr = GetStringID( losingReason )
+		announceRoundWinnerLosingSubstr = GetStringID( svGlobal.lossReasonText )
 
 	foreach ( entity player in GetPlayerArray() )
 	{
@@ -608,6 +616,26 @@ void function ClearRoundWinningKillReplayEntities()
 	file.roundWinningKillReplayHealthFrac = -1
 	file.roundWinningKillReplayVictim = null
 	file.roundWinningKillReplayInflictorEHandle = -1
+}
+
+string function GetGameWonAnnouncement()
+{
+	return svGlobal.gameWonAnnouncement
+}
+
+void function SetGameWonAnnouncement( string announcement )
+{
+	svGlobal.gameWonAnnouncement = announcement
+}
+
+string function GetGameLostAnnouncement()
+{
+	return svGlobal.gameLostAnnouncement
+}
+
+void function SetGameLostAnnouncement( string announcement )
+{
+	svGlobal.gameLostAnnouncement = announcement
 }
 
 /*
@@ -880,14 +908,13 @@ void function GameStateEnter_Playing()
 	if ( IsTitanEliminationBased() )
 		level.nv.secondsTitanCheckTime = Time() + ELIM_TITAN_SPAWN_GRACE_PERIOD
 
-	if ( Flag( "AnnounceProgressEnabled" ) )
-		thread DialoguePlayNormal()
-
 	FlagSet( "GamePlaying" )
 }
 
 void function GameRulesThink_Playing()
 {
+	UpdateMatchProgress()
+
 	if ( Time() - level.lastPlayingEmptyTeamCheck > 1.0 )
 	{
 		level.lastPlayingEmptyTeamCheck = Time()
@@ -917,8 +944,6 @@ void function GameRulesThink_Playing()
 			return
 		}
 	}
-
-	UpdateMatchProgress()
 
 	foreach ( callbackFunc in svGlobal.playingThinkFuncTable )
 		callbackFunc()
@@ -964,8 +989,6 @@ void function GameRulesThink_SuddenDeath()
 
 void function GameStateEnter_WinnerDetermined()
 {
-	GameRules_MarkGameStateWinnerDetermined()
-
 	svGlobal.levelEnt.Signal( "RoundEnd" )
 
 	if ( IsRoundBased() )
@@ -998,9 +1021,11 @@ void function GameStateEnter_WinnerDetermined()
 		level.nv.roundScoreLimitComplete = true
 	}
 
+	GameRules_MarkGameStateWinnerDetermined()
+	AnnounceWinner( GetWinningTeam() )
+
 	level.nv.gameEndTime = Time()
 
-	DialoguePlayWinnerDetermined()
 	CreateLevelWinnerDeterminedMusicEvent()
 	thread ScoreEvent_MatchComplete( GetWinningTeam() )
 	RegisterMatchStats_OnMatchComplete()
@@ -1460,100 +1485,6 @@ void function GiveTitanToPlayer( entity player )
 	PlayerEarnMeter_AddEarnedAndOwned( player, 1.0, 1.0 )
 }
 
-void function DialoguePlayNormal()
-{
-	#if FACTION_DIALOGUE_ENABLED
-		svGlobal.levelEnt.EndSignal( "GameStateChanged" )
-
-		int totalScore = GameMode_GetScoreLimit( GameRules_GetGameMode() )
-		int winningTeam
-		int losingTeam
-		float diagInterval = 91
-
-		while ( GamePlaying() )
-		{
-			wait diagInterval
-
-			if ( GameRules_GetTeamScore( TEAM_MILITIA ) < GameRules_GetTeamScore( TEAM_IMC ) )
-			{
-				winningTeam = TEAM_IMC
-				losingTeam = TEAM_MILITIA
-			}
-
-			if ( GameRules_GetTeamScore( TEAM_MILITIA ) > GameRules_GetTeamScore( TEAM_IMC ) )
-			{
-				winningTeam = TEAM_MILITIA
-				losingTeam = TEAM_IMC
-			}
-
-			if ( GameRules_GetTeamScore( winningTeam ) - GameRules_GetTeamScore( losingTeam ) >= totalScore * 0.4 )
-			{
-				PlayFactionDialogueToTeam( "scoring_winningLarge", winningTeam )
-				PlayFactionDialogueToTeam( "scoring_losingLarge", losingTeam )
-			}
-			else if ( GameRules_GetTeamScore( winningTeam ) - GameRules_GetTeamScore( losingTeam ) <= totalScore * 0.2 )
-			{
-				PlayFactionDialogueToTeam( "scoring_winningClose", winningTeam )
-				PlayFactionDialogueToTeam( "scoring_losingClose", losingTeam )
-			}
-			else if ( GameRules_GetTeamScore( winningTeam ) == GameRules_GetTeamScore( losingTeam ) )
-			{
-				continue
-			}
-			else
-			{
-				PlayFactionDialogueToTeam( "scoring_winning", winningTeam )
-				PlayFactionDialogueToTeam( "scoring_losing", losingTeam )
-			}
-		}
-	#endif
-}
-
-void function DialoguePlayWinnerDetermined()
-{
-	#if FACTION_DIALOGUE_ENABLED
-		int totalScore = GameMode_GetScoreLimit( GameRules_GetGameMode() )
-		int winningTeam
-		int losingTeam
-
-		if ( GameRules_GetTeamScore( TEAM_MILITIA ) < GameRules_GetTeamScore( TEAM_IMC ) )
-		{
-			winningTeam = TEAM_IMC
-			losingTeam = TEAM_MILITIA
-		}
-
-		if ( GameRules_GetTeamScore( TEAM_MILITIA ) > GameRules_GetTeamScore( TEAM_IMC ) )
-		{
-			winningTeam = TEAM_MILITIA
-			losingTeam = TEAM_IMC
-		}
-
-		if ( IsRoundBased() && GameRules_GetTeamScore( winningTeam ) != GameMode_GetRoundScoreLimit( GAMETYPE ) )
-			return
-
-		if ( GameRules_GetTeamScore( winningTeam ) - GameRules_GetTeamScore( losingTeam ) >= totalScore * 0.4 )
-		{
-			PlayFactionDialogueToTeam( "scoring_wonMercy", winningTeam )
-			PlayFactionDialogueToTeam( "scoring_lostMercy", losingTeam )
-		}
-		else if ( GameRules_GetTeamScore( winningTeam ) - GameRules_GetTeamScore( losingTeam ) <= totalScore * 0.2 )
-		{
-			PlayFactionDialogueToTeam( "scoring_wonClose", winningTeam )
-			PlayFactionDialogueToTeam( "scoring_lostClose", losingTeam )
-		}
-		else if ( GameRules_GetTeamScore( winningTeam ) == GameRules_GetTeamScore( losingTeam ) )
-		{
-			PlayFactionDialogueToTeam( "scoring_tied", winningTeam )
-			PlayFactionDialogueToTeam( "scoring_tied", losingTeam )
-		}
-		else
-		{
-			PlayFactionDialogueToTeam( "scoring_won", winningTeam )
-			PlayFactionDialogueToTeam( "scoring_lost", losingTeam )
-		}
-	#endif
-}
-
 void function PerfInitLabels()
 {
 	PerfClearAll()
@@ -1733,7 +1664,7 @@ int function CheckEliminationPilotWinner( bool setWinner = false )
 
 	if ( setWinner && level.nv.winningTeam == null )
 	{
-		SetWinner( winningTeam, winReason, lossReason )
+		SetWinner( winningTeam, eWinReason.ELIMINATION, winReason, lossReason )
 		return winningTeam
 	}
 
@@ -1946,7 +1877,7 @@ int function CheckEliminationTitanWinner( bool setWinner = false )
 
 	if ( setWinner && level.nv.winningTeam == null )
 	{
-		SetWinner( winningTeam, winReason, lossReason )
+		SetWinner( winningTeam, eWinReason.ELIMINATION, winReason, lossReason )
 		return winningTeam
 	}
 
@@ -1974,7 +1905,7 @@ bool function ScoreLimit_Complete()
 		else if ( imcScore < militiaScore )
 			winningTeam = TEAM_MILITIA
 
-		SetWinner( winningTeam, "#GAMEMODE_SCORE_LIMIT_REACHED", "#GAMEMODE_SCORE_LIMIT_REACHED" )
+		SetWinner( winningTeam, eWinReason.SCORE_LIMIT, "#GAMEMODE_SCORE_LIMIT_REACHED", "#GAMEMODE_SCORE_LIMIT_REACHED" )
 		return true
 	}
 
@@ -2002,9 +1933,9 @@ bool function RoundScoreLimit_Complete()
 		if ( level.nv.winningTeam == null )
 		{
 			if ( winningTeam == TEAM_UNASSIGNED )
-				SetWinner( winningTeam, "#GAMEMODE_ROUND_LIMIT_REACHED", "#GAMEMODE_ROUND_LIMIT_REACHED" )
+				SetWinner( winningTeam, eWinReason.SCORE_LIMIT, "#GAMEMODE_ROUND_LIMIT_REACHED", "#GAMEMODE_ROUND_LIMIT_REACHED" )
 			else
-				SetWinner( winningTeam, "#GAMEMODE_SCORE_LIMIT_REACHED", "#GAMEMODE_SCORE_LIMIT_REACHED" )
+				SetWinner( winningTeam, eWinReason.SCORE_LIMIT, "#GAMEMODE_SCORE_LIMIT_REACHED", "#GAMEMODE_SCORE_LIMIT_REACHED" )
 		}
 
 		return true
@@ -2137,7 +2068,7 @@ bool function TimeLimit_Complete()
 
 		int winningTeam = GetMatchWinnerFromScore()
 
-		SetWinner( winningTeam, "#GAMEMODE_TIME_LIMIT_REACHED", "#GAMEMODE_TIME_LIMIT_REACHED" )
+		SetWinner( winningTeam, eWinReason.TIME_LIMIT, "#GAMEMODE_TIME_LIMIT_REACHED", "#GAMEMODE_TIME_LIMIT_REACHED" )
 		return true
 	}
 
@@ -2335,6 +2266,7 @@ void function UpdateMatchProgress()
 	{
 		level.nv.matchProgress = progressInt
 		// printt( "Match Progress: " + progressInt + "%" )
+		Announce_Progress( progress )
 	}
 }
 
@@ -2359,9 +2291,6 @@ float function GetMatchProgress_Score( int team = TEAM_UNASSIGNED )
 		militiaScore = GameRules_GetTeamScore( TEAM_MILITIA )
 		imcScore = GameRules_GetTeamScore( TEAM_IMC )
 	}
-
-	if ( !scoreLimit )
-		return 0.0
 
 	float militiaProgress = ( militiaScore.tofloat() / scoreLimit.tofloat() ) * 100.0
 	float imcProgress = ( imcScore.tofloat() / scoreLimit.tofloat() ) * 100.0
@@ -2429,6 +2358,124 @@ int function GetMatchWinnerFromScore()
 	}
 
 	return bestTeam
+}
+
+void function Announce_Progress( float progression )
+{
+	if ( !Flag( "AnnounceProgressEnabled" ) )
+		return
+
+	// Call custom match progress announcement function if it exists
+	if ( svGlobal.matchProgressAnnounceFunc != null )
+	{
+		void functionref( int ) callbackInfo = svGlobal.matchProgressAnnounceFunc
+
+		callbackInfo.func( progression )
+		return
+	}
+
+	DefaultMatchProgressionAnnouncement( progression )
+}
+
+void function DefaultMatchProgressionAnnouncement( float progression )
+{
+	int winningTeam = GetWinningTeam()
+
+	if ( winningTeam == TEAM_UNASSIGNED )
+		return
+
+	if ( progression < level.nextMatchProgressAnnouncementLevel )
+		return
+
+	table<string, string> announcements = {}
+
+	announcements.winningAnnouncement <- ""
+	announcements.losingAnnouncement <- ""
+
+	SetMatchProgressAnnouncements( progression, announcements )
+	PlayFactionDialogueToTeam( announcements.winningAnnouncement, winningTeam )
+
+	int losingTeam = GetOtherTeam( winningTeam )
+
+	PlayFactionDialogueToTeam( announcements.losingAnnouncement, losingTeam )
+
+	// Set the nextMatchProgressAnnouncementLevel
+	foreach ( matchProgressThreshold in MATCH_PROGRESS_THRESHOLDS )
+	{
+		if ( expect int( level.nextMatchProgressAnnouncementLevel ) < matchProgressThreshold )
+		{
+			level.nextMatchProgressAnnouncementLevel = matchProgressThreshold
+			// printt( "Setting match progressThreshold to :" + matchProgressThreshold )
+			break
+		}
+	}
+}
+
+void function SetMatchProgressAnnouncements( float progression, table<string, string> announcements )
+{
+	float scoreRatio = max( GetScoreRatio(), GetScoreNeededRatio() )
+
+	// printt( "scoreRatio: " + scoreRatio )
+	if ( scoreRatio >= 0.95 )
+	{
+		announcements.winningAnnouncement = "scoring_winningClose"
+		announcements.losingAnnouncement = "scoring_losingClose"
+		// printt( "ScoreClose, playing to winner: " + announcements.winningAnnouncement + ", playing to loser: " + announcements.losingAnnouncement )
+		return
+	}
+
+	bool isBigMargin = scoreRatio <= 0.75
+
+	if ( isBigMargin )
+	{
+		announcements.winningAnnouncement = "scoring_winningLarge"
+		announcements.losingAnnouncement = "scoring_losingLarge"
+		// printt( "ScoreLarge, playing to winner: " + announcements.winningAnnouncement + ", playing to loser: " + announcements.losingAnnouncement )
+	}
+	else
+	{
+		announcements.winningAnnouncement = "scoring_winning"
+		announcements.losingAnnouncement = "scoring_losing"
+		// printt( "Score, playing to winner: " + announcements.winningAnnouncement + ", playing to loser: " + announcements.losingAnnouncement )
+	}
+}
+
+void function AnnounceWinner( int winningTeam )
+{
+	if ( winningTeam != TEAM_UNASSIGNED ) // No announcement if draw
+	{
+		int losingTeam = GetOtherTeam( winningTeam )
+		table<int, array<entity> > teamPlayers = {}
+		int functionref( entity, entity ) compareFunc = GetScoreboardCompareFunc()
+
+		teamPlayers[ winningTeam ] <- GetSortedPlayers( compareFunc, winningTeam )
+		teamPlayers[ losingTeam ] <- GetSortedPlayers( compareFunc, losingTeam )
+
+		float scoreRatio = max( GetScoreRatio(), GetScoreNeededRatio() )
+
+		if ( !GetGameWonAnnouncement().len() ) // If a custom announcement is set already, use that
+		{
+			if ( scoreRatio <= 0.6 )
+				SetGameWonAnnouncement( "scoring_wonMercy" )
+			else if ( scoreRatio <= 0.8 )
+				SetGameWonAnnouncement( "scoring_wonClose" )
+			else
+				SetGameWonAnnouncement( "scoring_won" )
+		}
+
+		if ( !GetGameLostAnnouncement().len() ) // If a custom announcement is set already, use that
+		{
+			if ( scoreRatio <= 0.6 )
+				SetGameLostAnnouncement( "scoring_lostMercy" )
+			else if ( scoreRatio <= 0.8 )
+				SetGameLostAnnouncement( "scoring_lostClose" )
+			else
+				SetGameLostAnnouncement( "scoring_lost" )
+		}
+
+		PlayFactionDialogueToTeam( GetGameWonAnnouncement(), winningTeam )
+		PlayFactionDialogueToTeam( GetGameLostAnnouncement(), losingTeam )
+	}
 }
 
 void function ClearWeapons()

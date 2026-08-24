@@ -53,7 +53,7 @@ void function SelectFirstInfectedDelayed()
 	if ( !players.len() )
 	{
 		printt( "Couldn't select first infected: player array was empty" )
-		SetWinner( INFECTION_TEAM_SURVIVOR )
+		SetWinner( INFECTION_TEAM_SURVIVOR, eWinReason.DEFAULT, "", "" )
 		return
 	}
 
@@ -89,7 +89,7 @@ void function InfectPlayer( entity player )
 	// check how many survivors there are
 	array<entity> survivors = GetPlayerArrayOfTeam( INFECTION_TEAM_SURVIVOR )
 	if ( survivors.len() == 0 )
-		SetWinner( INFECTION_TEAM_INFECTED )
+		SetWinner( INFECTION_TEAM_INFECTED, eWinReason.DEFAULT, "", "" )
 	else if ( survivors.len() == 1 && !file.hasHadLastInfection )
 		SetLastSurvivor( survivors[ 0 ] )
 
@@ -214,9 +214,9 @@ void function SetLastSurvivor( entity player )
 bool function TimelimitCheckSurvivors()
 {
 	if ( GetPlayerArrayOfTeam( INFECTION_TEAM_SURVIVOR ).len() )
-		SetWinner( INFECTION_TEAM_SURVIVOR, "#GAMEMODE_TIME_LIMIT_REACHED", "#GAMEMODE_TIME_LIMIT_REACHED" )
+		SetWinner( INFECTION_TEAM_SURVIVOR, eWinReason.TIME_LIMIT, "#GAMEMODE_TIME_LIMIT_REACHED", "#GAMEMODE_TIME_LIMIT_REACHED" )
 	else
-		SetWinner( INFECTION_TEAM_INFECTED, "#GAMEMODE_TIME_LIMIT_REACHED", "#GAMEMODE_TIME_LIMIT_REACHED" )
+		SetWinner( INFECTION_TEAM_INFECTED, eWinReason.TIME_LIMIT, "#GAMEMODE_TIME_LIMIT_REACHED", "#GAMEMODE_TIME_LIMIT_REACHED" )
 
 	return true
 }

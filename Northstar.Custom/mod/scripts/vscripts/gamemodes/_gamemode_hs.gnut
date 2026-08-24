@@ -217,7 +217,7 @@ void function TryNotifyLastPlayerAlive( entity victim, entity attacker, var dama
 
 bool function HideAndSeekDecideWinner()
 {
-	SetWinner( HIDEANDSEEK_TEAM_HIDER, "#GAMEMODE_TIME_LIMIT_REACHED", "#GAMEMODE_TIME_LIMIT_REACHED" )
+	SetWinner( HIDEANDSEEK_TEAM_HIDER, eWinReason.TIME_LIMIT, "#GAMEMODE_TIME_LIMIT_REACHED", "#GAMEMODE_TIME_LIMIT_REACHED" )
 
 	return true
 }

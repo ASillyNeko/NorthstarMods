@@ -792,7 +792,10 @@ bool function DecideRespawnPlayer( entity player )
 	{
 		printt( "DecideRespawnPlayer() - PlayerShouldObserve() was true:", string( player ) )
 
-		if ( GetGameState() >= eGameState.Prematch && !WillShowRoundWinningKillReplay() && GetGameState() != eGameState.Postmatch ) // turning into a observer at this time will remove screen fade
+		if (
+			GetGameState() >= eGameState.Prematch && !( GetGameState() == eGameState.WinnerDetermined && IsRoundBased() && !RoundScoreLimit_Complete() ) &&
+			GetGameState() != eGameState.SwitchingSides && GetGameState() != eGameState.Postmatch
+		) // turning into a observer at this time will remove screen fade
 		{
 			if ( IsPlayerEliminated( player ) && GamePlaying() && IsRoundBased() )
 				SendHudMessage( player, "#GAMEMODE_RESPAWN_NEXT_ROUND", -1, 0.4, 255, 255, 255, 255, 1.0, 6.0, 1.0 )
@@ -1179,7 +1182,7 @@ bool function CheckForEmptyTeamVictory()
 
 		if ( !enemies.len() ) // if i have no enemies, then i win
 		{
-			SetWinner( player.GetTeam(), "#ENEMY_TEAM_DISCONNECTED_WIN_ANNOUNCEMENT", "#ENEMY_TEAM_DISCONNECTED_LOSS_ANNOUNCEMENT" )
+			SetWinner( player.GetTeam(), eWinReason.ELIMINATION, "#ENEMY_TEAM_DISCONNECTED_WIN_ANNOUNCEMENT", "#ENEMY_TEAM_DISCONNECTED_LOSS_ANNOUNCEMENT" )
 			return true
 		}
 	}

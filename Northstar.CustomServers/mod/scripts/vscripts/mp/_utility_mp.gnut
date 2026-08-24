@@ -70,7 +70,7 @@ void function ForceTeamWin( int team )
 
 	svGlobal.levelEnt.Signal( "devForcedWin" )
 
-	SetWinner( team, "#DEV_COMMAND_FORCED_WIN_ANNOUNCEMENT", "#DEV_COMMAND_FORCED_LOSS_ANNOUNCEMENT" ) // ignore the fact that only r1_english doesn't have localisation for this
+	SetWinner( team, eWinReason.DEFAULT, "#DEV_COMMAND_FORCED_WIN_ANNOUNCEMENT", "#DEV_COMMAND_FORCED_LOSS_ANNOUNCEMENT" ) // ignore the fact that only r1_english doesn't have localisation for this
 }
 
 void function ForceDraw()
@@ -564,4 +564,38 @@ void function UpdatePlayerWins( entity player )
 
 	player.SetPersistentVar( "winLossHistory[0]", winLoss )
 	player.SetPersistentVar( "winLossHistorySize", min( NUM_GAMES_TRACK_WINLOSS_HISTORY, player.GetPersistentVar( "winLossHistorySize" ) + 1 ) )
+}
+
+float function GetScoreRatio()
+{
+	int winningTeam = GetWinningTeam()
+
+	if ( !winningTeam )
+		return 1.0
+
+	int winningTeamScore = GameRules_GetTeamScore( winningTeam )
+	int losingTeamScore = GameRules_GetTeamScore( GetOtherTeam( winningTeam ) )
+
+	// print( "winningScore: " + winningTeamScore + ", losingScore: " + losingTeamScore + ", ratio: " + ( losingTeamScore.tofloat() / winningTeamScore ) )
+
+	return losingTeamScore.tofloat() / winningTeamScore
+}
+
+float function GetScoreNeededRatio()
+{
+	int winningTeam = GetWinningTeam()
+
+	if ( !winningTeam )
+		return 1.0
+
+	int scoreLimit = IsRoundBased() ? GetRoundScoreLimit_FromPlaylist() : GetScoreLimit_FromPlaylist()
+	int winningTeamScore = GameRules_GetTeamScore( winningTeam )
+	int losingTeamScore = GameRules_GetTeamScore( GetOtherTeam( winningTeam ) )
+	int winningTeamLeftToScore = scoreLimit - winningTeamScore
+	int losingTeamLeftToScore = scoreLimit - losingTeamScore
+
+	// printt( "winningScore: " + winningTeamScore + ", losingScore: " + losingTeamScore + ", scoreLimit: " +
+	// scoreLimit + ", scoreNeededRatio: " + ( winningTeamLeftToScore.tofloat() / losingTeamLeftToScore ) )
+
+	return winningTeamLeftToScore.tofloat() / losingTeamLeftToScore
 }

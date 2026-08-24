@@ -967,7 +967,7 @@ bool function runWave( int waveIndex, bool shouldDoBuyTime )
 
 		if ( FD_PlayersHaveRestartsLeft() )
 		{
-			SetWinner( TEAM_IMC )
+			SetWinner( TEAM_IMC, eWinReason.DEFAULT, "", "" )
 			PlayFactionDialogueToTeam( "fd_baseDeath", TEAM_MILITIA, true )
 			foreach ( entity player in GetPlayerArrayOfTeam( TEAM_MILITIA ) )
 			{
@@ -990,7 +990,7 @@ bool function runWave( int waveIndex, bool shouldDoBuyTime )
 		else
 		{
 			SetRoundBased( false )
-			SetWinner( TEAM_IMC, "#FD_TOTAL_DEFEAT_HINT", "#FD_TOTAL_DEFEAT_HINT" )
+			SetWinner( TEAM_IMC, eWinReason.SCORE_LIMIT, "#FD_TOTAL_DEFEAT_HINT", "#FD_TOTAL_DEFEAT_HINT" )
 			printt( "Finishing match, no more retries left" )
 			PlayFactionDialogueToTeam( "fd_matchDefeat", TEAM_MILITIA, true )
 		}
@@ -1093,7 +1093,7 @@ void function FD_Win()
 	else
 	{
 		SetRoundBased( false )
-		SetWinner( TEAM_MILITIA, "#FD_TOTAL_VICTORY_HINT", "#FD_TOTAL_VICTORY_HINT" )
+		SetWinner( TEAM_MILITIA, eWinReason.DEFAULT, "#FD_TOTAL_VICTORY_HINT", "#FD_TOTAL_VICTORY_HINT" )
 		return
 	}
 
@@ -1109,7 +1109,7 @@ void function FD_Win()
 	}
 
 	SetRoundBased( false )
-	SetWinner( TEAM_MILITIA, "#FD_TOTAL_VICTORY_HINT", "#FD_TOTAL_VICTORY_HINT" )
+	SetWinner( TEAM_MILITIA, eWinReason.DEFAULT, "#FD_TOTAL_VICTORY_HINT", "#FD_TOTAL_VICTORY_HINT" )
 	PlayFactionDialogueToTeam( "fd_matchVictory", TEAM_MILITIA, true )
 
 	wait 2

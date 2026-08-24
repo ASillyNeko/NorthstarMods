@@ -45,7 +45,7 @@ void function SelectFirstHiddenDelayed()
 	if ( !players.len() )
 	{
 		printt( "Couldn't select first hidden: player array was empty" )
-		SetWinner( TEAM_MILITIA )
+		SetWinner( TEAM_MILITIA, eWinReason.DEFAULT, "", "" )
 		return
 	}
 
@@ -232,9 +232,9 @@ void function VisibleNotification( entity player )
 bool function TimelimitCheckSurvivors()
 {
 	if ( GetPlayerArrayOfTeam( TEAM_MILITIA ).len() )
-		SetWinner( TEAM_IMC, "#GAMEMODE_TIME_LIMIT_REACHED", "#GAMEMODE_TIME_LIMIT_REACHED" )
+		SetWinner( TEAM_IMC, eWinReason.TIME_LIMIT, "#GAMEMODE_TIME_LIMIT_REACHED", "#GAMEMODE_TIME_LIMIT_REACHED" )
 	else
-		SetWinner( TEAM_MILITIA, "#GAMEMODE_TIME_LIMIT_REACHED", "#GAMEMODE_TIME_LIMIT_REACHED" )
+		SetWinner( TEAM_MILITIA, eWinReason.TIME_LIMIT, "#GAMEMODE_TIME_LIMIT_REACHED", "#GAMEMODE_TIME_LIMIT_REACHED" )
 
 	return true
 }

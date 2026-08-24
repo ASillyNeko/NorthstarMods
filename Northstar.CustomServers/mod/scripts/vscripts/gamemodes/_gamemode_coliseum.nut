@@ -180,7 +180,7 @@ void function RunColiseumOutroThreaded( entity winningPlayer, entity losingPlaye
 	losingPlayer.EndSignal( "OnDestroy" )
 
 	// pick winner and loser anims
-	int numLost = min( 2, GameRules_GetTeamScore( GetOtherTeam( GetWinningTeam() ) ) ).tointeger()
+	int numLost = min( 2, GameRules_GetTeamScore2( GetOtherTeam( GetWinningTeam() ) ) ).tointeger()
 	int animIndex = RandomInt( OUTROANIMS_WINNER[ numLost ].len() )
 
 	string winnerAnim = OUTROANIMS_WINNER[ numLost ][ animIndex ]
@@ -246,7 +246,7 @@ void function Coliseum_OnClientDisconnected( entity player )
 	{
 		if (
 			GetGameState() == eGameState.WinnerDetermined && GetWinningTeam() == player.GetTeam() &&
-			GameRules_GetTeamScore( player.GetTeam() ) >= GameMode_GetScoreLimit( GAMETYPE )
+			GameRules_GetTeamScore2( player.GetTeam() ) >= GameMode_GetRoundScoreLimit( GAMETYPE )
 		)
 		{
 			player.SetPersistentVar( "coliseumTotalWins", player.GetPersistentVarAsInt( "coliseumTotalWins" ) + 1 )
