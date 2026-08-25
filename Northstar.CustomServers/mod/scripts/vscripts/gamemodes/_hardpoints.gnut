@@ -135,7 +135,8 @@ void function OnHardpointEnter( entity trigger, entity player )
 	if ( hpState.capPlayers.find( player ) == -1 )
 		hpState.capPlayers.append( player )
 
-	Hardpoint_ThinkTick( hpState )
+	if ( GamePlaying() )
+		Hardpoint_ThinkTick( hpState )
 
 	player.SetPlayerNetInt( "playerHardpointID", hp.GetHardpointID() )
 
@@ -158,7 +159,8 @@ void function OnHardpointLeave( entity trigger, entity player )
 	if ( index != -1 )
 		hpState.capPlayers.fastremove( index )
 
-	Hardpoint_ThinkTick( hpState )
+	if ( GamePlaying() )
+		Hardpoint_ThinkTick( hpState )
 
 	if ( player.s.isPlayingCapturingSound )
 	{
