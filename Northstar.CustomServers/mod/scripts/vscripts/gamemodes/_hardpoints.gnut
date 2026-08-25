@@ -221,7 +221,7 @@ void function Hardpoint_ThinkTick( HardpointState hardpoint )
 	int team_Militia_Titan_Count = 0
 
 	// update counts based on capPlayers
-	ArrayRemoveInvalid( hardpoint.capPlayers )
+	ArrayRemoveDead( hardpoint.capPlayers )
 
 	foreach ( entity player in hardpoint.capPlayers )
 	{
