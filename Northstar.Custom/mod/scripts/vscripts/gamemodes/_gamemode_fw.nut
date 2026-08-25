@@ -147,7 +147,7 @@ void function GamemodeFW_Init()
 	SetRecalculateTitanReplacementPointCallback( FW_ReCalculateTitanReplacementPoint )
 	SetRequestTitanAllowedCallback( FW_RequestTitanAllowed )
 
-	level.modifyAISlots[ FW_AI_TEAM ] = 99
+	level.modifyAISlots[ FW_AI_TEAM ] = AI_HARD_LIMIT
 }
 
 // //////////////////////////////
@@ -849,11 +849,14 @@ void function FW_SpawnDroppodSquad( CampSiteStruct campsite, string aiType )
 	// add variation to spawns
 	wait RandomFloat( 1.0 )
 
-	thread FW_HandleSquadSpawn( Spawn_TrackedDropPodSquad( aiType, FW_AI_TEAM, 4, spawnpoint ), campsite, aiType )
+	thread FW_HandleSquadSpawn( Spawn_TrackedDropPodSquad( aiType, FW_AI_TEAM, SQUAD_SIZE, spawnpoint ), campsite, aiType )
 }
 
 void function FW_HandleSquadSpawn( array<entity> guys, CampSiteStruct campsite, string aiType )
 {
+	if ( guys.len() != SQUAD_SIZE && aiType in file.trackedCampNPCSpawns[ campsite.campId ] )
+		file.trackedCampNPCSpawns[ campsite.campId ][ aiType ]--
+
 	foreach ( entity guy in guys )
 	{
 		guy.EnableNPCFlag( NPC_ALLOW_PATROL | NPC_ALLOW_HAND_SIGNALS | NPC_ALLOW_FLEE ) // NPC_ALLOW_INVESTIGATE is not allowed
@@ -881,7 +884,15 @@ void function FW_SpawnReaper( CampSiteStruct campsite )
 	// add variation to spawns
 	wait RandomFloat( 1.0 )
 
-	entity reaper = Spawn_TrackedWarpfallReaper( FW_AI_TEAM, 1, spawnpoint )[ 0 ]
+	array<entity> reapers = Spawn_TrackedWarpfallReaper( FW_AI_TEAM, 1, spawnpoint )
+
+	if ( !reapers.len() && "npc_super_spectre" in file.trackedCampNPCSpawns[ campsite.campId ] )
+	{
+		file.trackedCampNPCSpawns[ campsite.campId ][ "npc_super_spectre" ]--
+		return
+	}
+
+	entity reaper = reapers[ 0 ]
 
 	reaper.SetScriptName( FW_NPC_SCRIPTNAME ) // no neet rn
 

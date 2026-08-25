@@ -121,7 +121,7 @@ void function GamemodeAt_Init()
 	// Initilaze gamemode entities
 	AddCallback_EntitiesDidLoad( OnEntitiesDidLoad )
 
-	level.modifyAISlots[ AT_AI_TEAM ] = 99
+	level.modifyAISlots[ AT_AI_TEAM ] = AI_HARD_LIMIT
 }
 
 void function RateSpawnpoints_AT( int checkclass, array<entity> spawnpoints, int team, entity player )
@@ -1436,6 +1436,13 @@ void function AT_SpawnDroppodSquad( AT_WaveOrigin campData, int spawnId, string 
 
 void function AT_HandleSquadSpawn( array<entity> guys, AT_WaveOrigin campData, int spawnId, string aiType, int scriptManagerId )
 {
+	if ( guys.len() != SQUAD_SIZE )
+	{
+		string npcNetVar = GetNPCNetVarName( aiType, spawnId )
+
+		SetGlobalNetInt( npcNetVar, GetGlobalNetInt( npcNetVar ) - ( SQUAD_SIZE - guys.len() ) )
+	}
+
 	foreach ( entity guy in guys )
 	{
 		// TODO: NPCs still seem to go outside their camp ???
@@ -1521,11 +1528,21 @@ void function AT_SpawnReaper( AT_WaveOrigin campData, int spawnId, int scriptMan
 	// add variation to spawns
 	wait RandomFloat( 1.0 )
 
-	thread AT_HandleReaperSpawn( Spawn_TrackedWarpfallReaper( AT_AI_TEAM, 1, spawnpoint )[ 0 ], campData, spawnId, scriptManagerId )
+	thread AT_HandleReaperSpawn( Spawn_TrackedWarpfallReaper( AT_AI_TEAM, 1, spawnpoint ), campData, spawnId, scriptManagerId )
 }
 
-void function AT_HandleReaperSpawn( entity reaper, AT_WaveOrigin campData, int spawnId, int scriptManagerId )
+void function AT_HandleReaperSpawn( array<entity> reapers, AT_WaveOrigin campData, int spawnId, int scriptManagerId )
 {
+	if ( !reapers.len() )
+	{
+		string npcNetVar = GetNPCNetVarName( "npc_super_spectre", spawnId )
+
+		SetGlobalNetInt( npcNetVar, GetGlobalNetInt( npcNetVar ) - 1 )
+		return
+	}
+
+	entity reaper = reapers[ 0 ]
+
 	// tracking lifetime
 	AddToScriptManagedEntArray( scriptManagerId, reaper )
 	thread AT_TrackNPCLifeTime( reaper, spawnId, "npc_super_spectre" )
@@ -1645,7 +1662,7 @@ void function AT_SpawnBountyTitan( AT_WaveOrigin campData, int spawnId, int scri
 	string titanClass = expect string( Dev_GetAISettingByKeyField_Global( aisettings, "npc_titan_player_settings" ) )
 
 	thread AT_HandleBossTitanSpawn(
-		Spawn_TrackedTitanfallTitan( AT_AI_TEAM, 1, spawnpoint, "", titanClass, aisettings )[ 0 ],
+		Spawn_TrackedTitanfallTitan( AT_AI_TEAM, 1, spawnpoint, "", titanClass, aisettings ),
 		campData,
 		spawnId,
 		bountyID,
@@ -1653,8 +1670,18 @@ void function AT_SpawnBountyTitan( AT_WaveOrigin campData, int spawnId, int scri
 	)
 }
 
-void function AT_HandleBossTitanSpawn( entity titan, AT_WaveOrigin campData, int spawnId, int bountyID, int scriptManagerId )
+void function AT_HandleBossTitanSpawn( array<entity> titans, AT_WaveOrigin campData, int spawnId, int bountyID, int scriptManagerId )
 {
+	if ( !titans.len() )
+	{
+		string npcNetVar = GetNPCNetVarName( "npc_titan", spawnId )
+
+		SetGlobalNetInt( npcNetVar, GetGlobalNetInt( npcNetVar ) - 1 )
+		return
+	}
+
+	entity titan = titans[ 0 ]
+
 	// set the bounty to be campEnt, for client tracking
 	SetGlobalNetEnt( "camp" + string( spawnId + 1 ) + "Ent", titan )
 	// set up health
