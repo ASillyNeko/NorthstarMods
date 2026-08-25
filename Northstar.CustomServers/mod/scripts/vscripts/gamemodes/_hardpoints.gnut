@@ -255,8 +255,6 @@ void function Hardpoint_ThinkTick( HardpointState hardpoint )
 	float deltaTime = Time() - hardpoint.lastTime
 	table capPower = GetCapPower( hardpoint.ent )
 
-	ArrayRemoveInvalid( hardpoint.capPlayers )
-
 	// I am pretty sure it's just a check for if both teams are present not which one has more
 	if ( capPower.contested )
 	{
