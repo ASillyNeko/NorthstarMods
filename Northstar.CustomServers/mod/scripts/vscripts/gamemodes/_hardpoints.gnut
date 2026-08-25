@@ -185,40 +185,7 @@ void function Hardpoint_Think( HardpointState hardpoint )
 	GM_AddPlayingThinkFunc(
 		void function() : ( hardpoint )
 		{
-			int team_IMC_Player_Count = 0
-			int team_IMC_Titan_Count = 0
-			int team_Militia_Player_Count = 0
-			int team_Militia_Titan_Count = 0
-
-			// update counts based on capPlayers
-			ArrayRemoveInvalid( hardpoint.capPlayers )
-
-			foreach ( entity player in hardpoint.capPlayers )
-			{
-				if ( player.GetTeam() == TEAM_IMC )
-				{
-					team_IMC_Player_Count++
-
-					if ( player.IsTitan() )
-						team_IMC_Titan_Count++
-				}
-				else if ( player.GetTeam() == TEAM_MILITIA )
-				{
-					team_Militia_Player_Count++
-
-					if ( player.IsTitan() )
-						team_Militia_Titan_Count++
-				}
-			}
-
-			hardpoint.ent.SetHardpointPlayerTitanCount( TEAM_IMC, team_IMC_Titan_Count )
-			hardpoint.ent.SetHardpointPlayerCount( TEAM_IMC, team_IMC_Player_Count )
-			hardpoint.ent.SetHardpointPlayerTitanCount( TEAM_MILITIA, team_Militia_Titan_Count )
-			hardpoint.ent.SetHardpointPlayerCount( TEAM_MILITIA, team_Militia_Player_Count )
-
 			Hardpoint_ThinkTick( hardpoint )
-
-			SetTeam( hardpoint.prop, CapturePoint_GetOwningTeam( hardpoint.ent ) ) // hardpoint has to have the correct color
 		}
 	)
 
@@ -248,6 +215,37 @@ const IMC_HOLD = HAS_IMC | HAS_IMC_TITAN
 const MILITIA_HOLD = HAS_MILITIA | HAS_MILITIA_TITAN
 void function Hardpoint_ThinkTick( HardpointState hardpoint )
 {
+	int team_IMC_Player_Count = 0
+	int team_IMC_Titan_Count = 0
+	int team_Militia_Player_Count = 0
+	int team_Militia_Titan_Count = 0
+
+	// update counts based on capPlayers
+	ArrayRemoveInvalid( hardpoint.capPlayers )
+
+	foreach ( entity player in hardpoint.capPlayers )
+	{
+		if ( player.GetTeam() == TEAM_IMC )
+		{
+			team_IMC_Player_Count++
+
+			if ( player.IsTitan() )
+				team_IMC_Titan_Count++
+		}
+		else if ( player.GetTeam() == TEAM_MILITIA )
+		{
+			team_Militia_Player_Count++
+
+			if ( player.IsTitan() )
+				team_Militia_Titan_Count++
+		}
+	}
+
+	hardpoint.ent.SetHardpointPlayerTitanCount( TEAM_IMC, team_IMC_Titan_Count )
+	hardpoint.ent.SetHardpointPlayerCount( TEAM_IMC, team_IMC_Player_Count )
+	hardpoint.ent.SetHardpointPlayerTitanCount( TEAM_MILITIA, team_Militia_Titan_Count )
+	hardpoint.ent.SetHardpointPlayerCount( TEAM_MILITIA, team_Militia_Player_Count )
+
 	int currentState = expect int( hardpoint.ent.s.state )
 	int currentTeam = CapturePoint_GetOwningTeam( hardpoint.ent )
 	int oldState = hardpoint.oldState
@@ -425,6 +423,8 @@ void function Hardpoint_ThinkTick( HardpointState hardpoint )
 	hardpoint.oldTeam = CapturePoint_GetOwningTeam( hardpoint.ent )
 	hardpoint.oldState = expect int( hardpoint.ent.s.state )
 	hardpoint.lastTime = Time()
+
+	SetTeam( hardpoint.prop, CapturePoint_GetOwningTeam( hardpoint.ent ) ) // hardpoint has to have the correct color
 }
 
 void function CaptureHardPoint( entity hardpoint, int team, float deltaTime, float cappers )
