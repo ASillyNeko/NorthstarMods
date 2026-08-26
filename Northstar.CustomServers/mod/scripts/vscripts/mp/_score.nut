@@ -283,6 +283,17 @@ void function ScoreEvent_NPCKilled( entity victim, entity attacker, var damageIn
 	if ( !attacker.IsPlayer() )
 		return
 
+	if ( IsMarvin( victim ) )
+		return
+
+	if ( IsGunship( victim ) )
+		return
+
+	string scoreEvent = ScoreEventForNPCKilled( victim, damageInfo )
+
+	if ( !scoreEvent.len() )
+		return
+
 	if ( DamageInfo_GetCustomDamageType( damageInfo ) & DF_HEADSHOT )
 		AddPlayerScore( attacker, "NPCHeadshot" )
 
