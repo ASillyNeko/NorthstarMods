@@ -12,7 +12,6 @@ global function ScoreEvent_RoundComplete
 
 global function ScoreEvent_SetEarnMeterValues
 global function ScoreEvent_SetupEarnMeterValuesForMixedModes
-global function ScoreEvent_SetupEarnMeterValuesForTitanModes
 
 struct
 {
@@ -287,14 +286,7 @@ void function ScoreEvent_NPCKilled( entity victim, entity attacker, var damageIn
 	if ( DamageInfo_GetCustomDamageType( damageInfo ) & DF_HEADSHOT )
 		AddPlayerScore( attacker, "NPCHeadshot" )
 
-	try
-	{
-		// have to trycatch this because marvins will crash on kill if we dont
-		AddPlayerScore( attacker, ScoreEventForNPCKilled( victim, damageInfo ), victim )
-	}
-	catch ( ex )
-	{
-	}
+	AddPlayerScore( attacker, ScoreEventForNPCKilled( victim, damageInfo ), victim )
 
 	// mayhem/onslaught (timed killstreaks vs AI)
 
@@ -388,11 +380,6 @@ void function ScoreEvent_SetupEarnMeterValuesForMixedModes() // mixed modes in t
 	ScoreEvent_SetEarnMeterValues( "KillSuperSpectre", 0.0, 0.1, 0.5 )
 }
 
-void function ScoreEvent_SetupEarnMeterValuesForTitanModes()
-{
-	// relatively sure we don't have to do anything here but leaving this function for consistency
-}
-
 // faction dialogue
 void function KilledPlayerTitanDialogue( entity attacker, entity victim )
 {
@@ -406,30 +393,30 @@ void function KilledPlayerTitanDialogue( entity attacker, entity victim )
 	{
 		case "ion":
 			PlayFactionDialogueToPlayer( "kc_pilotkillIon", attacker )
-			return
+			break
 
 		case "tone":
 			PlayFactionDialogueToPlayer( "kc_pilotkillTone", attacker )
-			return
+			break
 
 		case "legion":
 			PlayFactionDialogueToPlayer( "kc_pilotkillLegion", attacker )
-			return
+			break
 
 		case "scorch":
 			PlayFactionDialogueToPlayer( "kc_pilotkillScorch", attacker )
-			return
+			break
 
 		case "ronin":
 			PlayFactionDialogueToPlayer( "kc_pilotkillRonin", attacker )
-			return
+			break
 
 		case "northstar":
 			PlayFactionDialogueToPlayer( "kc_pilotkillNorthstar", attacker )
-			return
+			break
 
 		default:
 			PlayFactionDialogueToPlayer( "kc_pilotkilltitan", attacker )
-			return
+			break
 	}
 }

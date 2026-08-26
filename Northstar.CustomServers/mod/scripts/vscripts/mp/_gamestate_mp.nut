@@ -1049,7 +1049,7 @@ void function GameStateEnter_WinnerDetermined()
 	}
 	else if ( ShouldRunEvac() ) // RoundWinningKillReplay doesn't work with Evac!
 	{
-		RegisterChallenges_OnMatchEnd()
+		thread RegisterChallenges_OnMatchEnd()
 		ClassicMP_SetupEpilogue()
 		SetGameState( eGameState.Epilogue )
 	}

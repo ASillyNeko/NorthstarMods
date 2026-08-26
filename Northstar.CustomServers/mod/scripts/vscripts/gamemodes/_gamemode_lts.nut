@@ -22,7 +22,6 @@ void function GamemodeLts_Init()
 	Riff_ForceSetSpawnAsTitan( eSpawnAsTitan.Always )
 	SetShouldUseRoundWinningKillReplay( true )
 	SetRoundWinningKillReplayKillClasses( true, true ) // both titan and pilot kills are tracked
-	ScoreEvent_SetupEarnMeterValuesForTitanModes()
 	SetLoadoutGracePeriodEnabled( false )
 	FlagSet( "ForceStartSpawn" )
 

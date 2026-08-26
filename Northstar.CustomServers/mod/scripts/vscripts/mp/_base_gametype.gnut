@@ -798,7 +798,7 @@ bool function PlayerOrNPCKilled( entity ent, var damageInfo )
 			ScoreEvent_PlayerKilled( ent, attacker, damageInfo )
 		else if ( ent.IsTitan() && ent.IsNPC() )
 			ScoreEvent_TitanKilled( ent, attacker, damageInfo )
-		else
+		else if ( !IsMarvin( ent ) && !IsGunship( ent ) )
 			ScoreEvent_NPCKilled( ent, attacker, damageInfo )
 
 		entity victim = ent.IsTitan() ? ent.GetTitanSoul() : ent
