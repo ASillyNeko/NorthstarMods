@@ -178,6 +178,9 @@ bool function ClientCommandCallback_PrivateMatchSetMode( entity player, array<st
 
 bool function ClientCommandCallback_SetCustomMap( entity player, array<string> args )
 {
+	if ( file.startState == ePrivateMatchStartState.STARTING )
+		return true
+
 	if ( args.len() != 1 )
 		return true
 
@@ -206,7 +209,7 @@ bool function ClientCommandCallback_SetCustomMap( entity player, array<string> a
 
 bool function ClientCommandCallback_PrivateMatchSwitchTeams( entity player, array<string> args )
 {
-	if ( GetGamemodeVarOrUseValue( file.mode, "max_teams", "2" ).tointeger() != 2 )
+	if ( file.startState == ePrivateMatchStartState.STARTING || GetGamemodeVarOrUseValue( file.mode, "max_teams", "2" ).tointeger() != 2 )
 		return true
 
 	// currently only support 2 teams in private matches
@@ -216,7 +219,10 @@ bool function ClientCommandCallback_PrivateMatchSwitchTeams( entity player, arra
 
 bool function ClientCommandCallback_PrivateMatchToggleSpectate( entity player, array<string> args )
 {
-	if ( GetGamemodeVarOrUseValue( file.mode, "max_teams", "2" ).tointeger() != 2 || !GetConVarBool( "ns_allow_spectators" ) || !ServerIsPrivateMatch() )
+	if (
+		file.startState == ePrivateMatchStartState.STARTING || GetGamemodeVarOrUseValue( file.mode, "max_teams", "2" ).tointeger() != 2 ||
+		!GetConVarBool( "ns_allow_spectators" ) || !ServerIsPrivateMatch()
+	)
 		return true
 
 	player.SetPersistentVar( "privateMatchState", !player.GetPersistentVarAsInt( "privateMatchState" ) ? 1 : 0 )
