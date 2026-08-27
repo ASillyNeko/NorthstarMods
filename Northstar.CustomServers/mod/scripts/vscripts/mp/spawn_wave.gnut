@@ -77,6 +77,18 @@ struct
 	array<string> waveActiveSubGroups
 	int gruntAmountWithATWeapons = 0
 	int gruntAmountWithShields = 0
+	table<string, array<string> > NPCWeapons = {
+		["npc_soldier"] = [ "mp_weapon_rspn101", "mp_weapon_car", "mp_weapon_alternator_smg", "mp_weapon_hemlok_smg", "mp_weapon_r97" ],
+		["npc_spectre"] = [
+			"mp_weapon_hemlok",
+			"mp_weapon_vinson",
+			"mp_weapon_g2",
+			"mp_weapon_mastiff",
+			"mp_weapon_shotgun",
+			"mp_weapon_doubletake",
+			"mp_weapon_dmr"
+		]
+	}
 } file
 
 global array<array<WaveSpawnEvent> > WaveSpawnEvents
@@ -1332,7 +1344,7 @@ void function SpawnDroppodGrunts( WaveSpawnEvent ornull spawnEvent )
 		}
 
 		if ( i < file.gruntAmountWithATWeapons )
-			guy.GiveWeapon( AILoadout_GetRandomATWeaponForClass( guy ) )
+			guy.GiveWeapon( "mp_weapon_defender" )
 
 		SetTargetName( guy, GetTargetNameForID( eFD_AITypeIDs.GRUNT ) )
 		guy.MakeInvisible()
@@ -1457,7 +1469,7 @@ void function SpawnGruntDropship( WaveSpawnEvent ornull spawnEvent )
 		}
 
 		if ( i < file.gruntAmountWithATWeapons )
-			guy.GiveWeapon( AILoadout_GetRandomATWeaponForClass( guy ) )
+			guy.GiveWeapon( "mp_weapon_defender" )
 
 		SetTargetName( guy, GetTargetNameForID( eFD_AITypeIDs.GRUNT ) )
 		AddMinimapForHumans( guy )
@@ -1966,11 +1978,11 @@ void function AddMinimapForHumans( entity human )
 void function GiveMinionFDLoadout( entity npc )
 {
 	Assert( IsValid( npc ) && IsMinion( npc ), "Entity is not a spectre or grunt: " + npc )
-	string className = npc.GetClassName()
 
-	string weaponName = AILoadout_GetRandomWeaponForClass( npc )
-	if ( weaponName != "" )
-		SetSpawnOption_Weapon( npc, weaponName )
+	string className = npc.GetClassName()
+	string weaponName = file.NPCWeapons[ className ].getrandom()
+
+	SetSpawnOption_Weapon( npc, weaponName )
 }
 
 void function SlowEnemyMovementBasedOnDifficulty( entity npc )
