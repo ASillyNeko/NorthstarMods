@@ -96,16 +96,17 @@ void function AddPlayerScore( entity targetPlayer, string scoreEventName, entity
 		ownValue *= pilotScaleVar
 	}
 
-	Remote_CallFunction_NonReplay(
-		targetPlayer,
-		"ServerCallback_ScoreEvent",
-		event.eventId,
-		event.pointValue,
-		event.displayType,
-		associatedHandle,
-		earnValue,
-		ownValue
-	)
+	if ( !IsPrivateMatch() )
+		Remote_CallFunction_NonReplay(
+			targetPlayer,
+			"ServerCallback_ScoreEvent",
+			event.eventId,
+			event.pointValue,
+			event.displayType,
+			associatedHandle,
+			earnValue,
+			ownValue
+		)
 
 	if ( event.displayType & eEventDisplayType.CALLINGCARD ) // callingcardevents are shown to all players
 	{
