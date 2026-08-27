@@ -97,6 +97,7 @@ void function EarnMeterMP_PlayerLifeThink( entity player )
 	int lastEarnMeterMode = PlayerEarnMeter_GetMode( player )
 	bool saidTitanSoon = false
 	bool titanReadyMsg = false
+	bool isBeforePlaying = false
 	float lastPassiveGainTime = -1
 
 	OnThreadEnd(
@@ -141,6 +142,7 @@ void function EarnMeterMP_PlayerLifeThink( entity player )
 		else if ( GetGameState() < eGameState.Playing )
 		{
 			desiredEarnMeterMode = eEarnMeterMode.DISABLED
+			isBeforePlaying = true
 		}
 		else if ( !PlayerEarnMeter_Enabled() ) // for fd
 		{
@@ -210,9 +212,9 @@ void function EarnMeterMP_PlayerLifeThink( entity player )
 				}
 			}
 
-			if ( Time() >= lastPassiveGainTime && file.passiveMeterGainEnabled && GetGameState() != eGameState.Prematch )
+			if ( Time() >= lastPassiveGainTime && file.passiveMeterGainEnabled )
 			{
-				if ( lastPassiveGainTime == -1 )
+				if ( !isBeforePlaying && lastPassiveGainTime == -1 )
 				{
 					lastPassiveGainTime = Time() + 4.0
 				}
