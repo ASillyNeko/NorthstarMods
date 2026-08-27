@@ -610,7 +610,7 @@ void function mainGameLoop()
 
 	if ( !file.waveRestart )
 	{
-		if ( currentWave == 0 && GetCurrentPlaylistVarFloat( "riff_minimap_state", 0 ) == 0 )
+		if ( currentWave == 0 && !Riff_MinimapState() )
 		{
 			wait 14
 			PlayFactionDialogueToTeam( "fd_minimapTip", TEAM_MILITIA )

@@ -1942,7 +1942,7 @@ void function waitWaveSubGroup( WaveSpawnEvent ornull spawnEvent )
 
 void function PingMinimap( float x, float y, float duration, float spreadRadius, float ringRadius, int colorIndex )
 {
-	if ( GetCurrentPlaylistVarFloat( "riff_minimap_state", 0 ) == 0 )
+	if ( !Riff_MinimapState() )
 	{
 		foreach ( entity player in GetPlayerArrayOfTeam( TEAM_MILITIA ) )
 			Remote_CallFunction_NonReplay( player, "ServerCallback_FD_PingMinimap", x, y, duration, spreadRadius, ringRadius, colorIndex )

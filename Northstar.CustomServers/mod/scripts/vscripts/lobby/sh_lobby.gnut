@@ -192,26 +192,41 @@ void function AddPrivateMatchModeSettingEnumUIHack( string category, string play
 	// Sorts specific gamemode settings to the end of the list
 	int function SortMatchSettings( string categoryA, string categoryB )
 	{
-		if ( StartsWith( categoryA, "#PL_" ) || StartsWith( categoryA, "#GAMEMODE_" ) )
+		if ( categoryA == "#MODE_SETTING_CATEGORY_DEV" )
+			return 1
+		else if ( StartsWith( categoryA, "#PL_" ) || StartsWith( categoryA, "#GAMEMODE_" ) )
 			return -1
 		else if ( StartsWith( categoryB, "#PL_" ) || StartsWith( categoryB, "#GAMEMODE_" ) )
 			return 1
 
 		return SortStringAlphabetize( Localize( categoryA ), Localize( categoryB ) )
 	}
+
+	int function SortCategorySettings( CustomMatchSettingContainer categoryA, CustomMatchSettingContainer categoryB )
+	{
+		return SortMatchSettings( Localize( categoryA.localizedName ), Localize( categoryB.localizedName ) )
+	}
 #endif
 
 array<string> function GetPrivateMatchSettingCategories( bool uiAllowAllModeCategories = false )
 {
 	array<string> categories
+
 	foreach ( string k, v in file.customMatchSettingsByCategory )
 	{
 		#if !CLIENT
 			bool differentPlaylist = StartsWith( k, "#PL_" ) && k.slice( "#PL_".len() ) != PrivateMatch_GetSelectedMode()
 			bool differentGamemode = StartsWith( k, "#GAMEMODE_" ) && k.slice( "#GAMEMODE_".len() ) != PrivateMatch_GetSelectedMode()
+
 			if ( differentPlaylist || differentGamemode )
 				continue
 		#endif
+
+		#if !DEV
+			if ( k == "#MODE_SETTING_CATEGORY_DEV" )
+				continue
+		#endif
+
 		categories.append( k )
 	}
 
@@ -224,7 +239,18 @@ array<string> function GetPrivateMatchSettingCategories( bool uiAllowAllModeCate
 
 array<CustomMatchSettingContainer> function GetPrivateMatchCustomSettingsForCategory( string category )
 {
-	return file.customMatchSettingsByCategory[ category ]
+	#if !DEV
+		if ( category == "#MODE_SETTING_CATEGORY_DEV" )
+			return []
+	#endif
+
+	array<CustomMatchSettingContainer> categories = file.customMatchSettingsByCategory[ category ]
+
+	#if !SERVER
+		categories.sort( SortCategorySettings )
+	#endif
+
+	return categories
 }
 
 array<string> function GetPrivateMatchModes()

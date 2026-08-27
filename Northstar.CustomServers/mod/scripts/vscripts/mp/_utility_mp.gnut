@@ -309,7 +309,7 @@ int function GetReaperCount( int team )
 bool function ShouldSpawnSpectre( int team )
 {
 	if ( Riff_AllowNPCs() != eAllowNPCs.Default )
-		return ( Riff_AllowNPCs() == eAllowNPCs.SpectreOnly )
+		return Riff_AllowNPCs() == eAllowNPCs.SpectreOnly
 
 	if ( team == TEAM_IMC && Flag( "AllSpectreIMC" ) )
 		return true
