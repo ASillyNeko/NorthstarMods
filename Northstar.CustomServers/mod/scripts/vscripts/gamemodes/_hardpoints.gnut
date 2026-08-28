@@ -37,7 +37,6 @@ void function Hardpoints_Init()
 	RegisterSignal( "StopHardpointBehavior" )
 	RegisterSignal( "HardpointCaptureStart" )
 	RegisterSignal( "CapturePointStateChange" )
-	RegisterSignal( "CapturePointStateChangeSend" )
 	RegisterSignal( "CapturePointPlayerLeft" )
 	RegisterSignal( "CP_AWARD_TEAM_OWNED_POINTS_SIGNAL" )
 
@@ -392,7 +391,7 @@ void function Hardpoint_ThinkTick( HardpointState hardpoint )
 
 	table oldStates = { oldTeam = oldTeam, oldState = oldState }
 
-	if ( oldTeam != CapturePoint_GetOwningTeam( hardpoint.ent ) || oldState != hardpoint.ent.GetHardpointState() )
+	if ( oldState != hardpoint.ent.GetHardpointState() )
 		hardpoint.ent.Signal( "CapturePointStateChange", oldStates )
 
 	// update old stuff
