@@ -597,7 +597,12 @@ void function PostDeathThread_MP( entity player, var damageInfo, bool gamePlayin
 			wait respawnDelayTime - Time()
 		}
 		else
+		{
+			if ( !shouldDoReplay )
+				PutPlayerInObserverMode( player, OBS_MODE_STATIC_LOCKED )
+
 			wait respawnDelay
+		}
 
 		if ( !player.s.respawnSelectionDone && GetGameState() != eGameState.SuddenDeath ) // Only wait outside Sudden Death since players gets inputs blocked to respawn if they die before Sudden Death starts
 			player.WaitSignal( "RespawnMe" )
