@@ -1630,10 +1630,11 @@ function PlayerCanDisembarkTitan( entity player )
 		while ( IsPlayerDisembarking( player ) )
 		{
 			Assert( Time() - currentTime < allowedTime ) // Failsafe of waiting 2 seconds in case SOMETHING REALLY GOES WRONG.
-			if ( !IsAlive( player ) )
-				return
 
 			WaitFrame()
+
+			if ( !IsAlive( player ) )
+				return
 		}
 
 		if ( player.ContextAction_IsActive() ) // Immediately after disembarking player might have gotten pulled into another context action e.g. embarking into evac dropship
