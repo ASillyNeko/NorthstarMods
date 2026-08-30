@@ -1626,7 +1626,6 @@ function PlayerCanDisembarkTitan( entity player )
 		float allowedTime = player.p.isCustomDisembark ? 10.0 : 2.0
 
 		player.EndSignal( "OnDestroy" )
-		player.EndSignal( "OnDeath" )
 
 		while ( IsPlayerDisembarking( player ) )
 		{
@@ -1690,7 +1689,7 @@ function PlayerCanDisembarkTitan( entity player )
 		OnThreadEnd(
 			function() : ( player, e )
 			{
-				if ( IsValid( player ) )
+				if ( IsAlive( player ) )
 					thread DelayedSafePlayerLocationForDisembark( player, expect entity( e.titan ) )
 			}
 		)
