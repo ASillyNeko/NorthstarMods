@@ -919,6 +919,13 @@ function EmbarkLine( player, titan )
 
 		// thread DelayedDisableEmbarkPlayerHud( player, sequence )
 
+		#if MP
+			if ( !doFirstPersonAnim && ShouldRunFirstPersonSequence( player, true, false ) )
+				FirstPersonSequenceForce1P( sequence, player, titan )
+		#endif
+
+		AddAnimEvent( player, "phase_shift_start", PhaseEmbarkPhaseStart )
+		AddAnimEvent( player, "phase_shift_stop", PhaseEmbarkPhaseStop )
 		AddAnimEvent( titan, "cockpit_light_start", CockpitLightStart )
 		AddAnimEvent( titan, "cockpit_light_stop", CockpitLightStop )
 
@@ -936,14 +943,6 @@ function EmbarkLine( player, titan )
 					titan.Die()
 			}
 		)
-
-		#if MP
-			if ( !doFirstPersonAnim && ShouldRunFirstPersonSequence( player, true, false ) )
-				FirstPersonSequenceForce1P( sequence, player, titan )
-		#endif
-
-		AddAnimEvent( player, "phase_shift_start", PhaseEmbarkPhaseStart )
-		AddAnimEvent( player, "phase_shift_stop", PhaseEmbarkPhaseStop )
 
 		thread FirstPersonSequence( sequence, player, titan )
 		// EmitDifferentSoundsOnEntityForPlayerAndWorld( firstPersonAudio, thirdPersonAudio, titan, player )
@@ -1081,7 +1080,6 @@ function EmbarkLine( player, titan )
 		player.MakeInvisible()
 		PlayPhaseShiftDisappearFX( player )
 		EmitSoundOnEntity( player, "pilot_phaseembark_activate_3p" )
-
 		thread PhaseEmbarkPhaseCleanup( player )
 	}
 
@@ -1649,6 +1647,7 @@ function PlayerCanDisembarkTitan( entity player )
 		float allowedTime = player.p.isCustomDisembark ? 10.0 : 2.0
 
 		player.EndSignal( "OnDestroy" )
+		player.EndSignal( "OnDeath" )
 
 		while ( IsPlayerDisembarking( player ) )
 		{
