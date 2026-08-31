@@ -1,6 +1,9 @@
 untyped
-global function GamemodeFastballIntroSetup
+
 global function FastballAddBuddySpawnForLevel
+global function FastballCanRunIntro
+global function FastballIntroPlayerSpawn
+global function FastballIntroPrematchSpawnPlayers
 
 struct
 {
@@ -11,31 +14,48 @@ struct
 	entity imcBuddy
 } file
 
-void function GamemodeFastballIntroSetup()
-{
-	RegisterSignal( "fastball_start_throw" )
-	RegisterSignal( "fastball_release" )
-
-	AddCallback_GameStateEnter( eGameState.Prematch, OnPrematchStart )
-	AddCallback_OnClientConnected( AddPlayerToFastballIntro )
-}
-
 void function FastballAddBuddySpawnForLevel( string level, int team, vector origin, vector angles )
 {
 	if ( GetMapName() != level )
 		return
 
 	Point spawnPoint
+
 	spawnPoint.origin = origin
 	spawnPoint.angles = angles
 
 	file.buddySpawns[ team ] <- spawnPoint
 }
 
-void function OnPrematchStart()
+bool function FastballCanRunIntro()
 {
-	ClassicMP_OnIntroStarted()
+	if ( ShouldIntroSpawnAsTitan() )
+		return false
 
+	SetCustomIntroLength( 14.7 )
+
+	return true
+}
+
+bool function FastballIntroPlayerSpawn( entity player )
+{
+	AddPlayerToFastballIntro( player )
+
+	return true
+}
+
+bool function FastballIntroPrematchSpawnPlayers( array<entity> players )
+{
+	SpawnBuddyTitans()
+
+	foreach ( entity player in players )
+		player.UnfreezeControlsOnServer()
+
+	return true
+}
+
+void function SpawnBuddyTitans()
+{
 	file.introStartTime = Time()
 
 	Point militiaBuddySpawn
@@ -64,10 +84,12 @@ void function OnPrematchStart()
 		}
 
 		entity milititaSpawnEnt = militiaSpawns[ RandomInt( militiaSpawns.len() ) ]
+
 		militiaBuddySpawn.origin = milititaSpawnEnt.GetOrigin()
 		militiaBuddySpawn.angles = milititaSpawnEnt.GetAngles()
 
 		entity imcSpawnEnt = imcSpawns[ RandomInt( imcSpawns.len() ) ]
+
 		imcBuddySpawn.origin = imcSpawnEnt.GetOrigin()
 		imcBuddySpawn.angles = imcSpawnEnt.GetAngles()
 	}
@@ -106,14 +128,11 @@ void function OnPrematchStart()
 	}
 
 	thread AnimateBuddy( file.imcBuddy )
-
-	foreach ( entity player in GetPlayerArray() )
-		AddPlayerToFastballIntro( player )
 }
 
 void function AnimateBuddy( entity buddy )
 {
-	print( "buddy spawn at " + buddy.GetOrigin() + " " + buddy.GetAngles() )
+	printt( "buddy spawn at " + buddy.GetOrigin() + " " + buddy.GetAngles() )
 
 	thread PlayAnim( buddy, "bt_beacon_fastball_throw_end" )
 
@@ -124,10 +143,7 @@ void function AnimateBuddy( entity buddy )
 
 	StartParticleEffectOnEntity( buddy, GetParticleSystemIndex( $"P_BT_eye_SM" ), FX_PATTACH_POINT_FOLLOW, buddy.LookupAttachment( "EYEGLOW" ) )
 
-	wait diagDuration
-
-	if ( GetGameState() != eGameState.Playing )
-		ClassicMP_OnIntroFinished()
+	// wait diagDuration
 
 	buddy.WaitSignal( "fastball_release" )
 
@@ -141,16 +157,12 @@ void function AnimateBuddy( entity buddy )
 
 void function AddPlayerToFastballIntro( entity player )
 {
-	if ( GetGameState() == eGameState.Prematch && !IsPrivateMatchSpectator( player ) )
-		thread FastballPlayer( player )
+	thread FastballPlayer( player )
 }
 
 void function FastballPlayer( entity player )
 {
 	player.EndSignal( "OnDestroy" )
-
-	if ( IsAlive( player ) )
-		player.Die() // kill player if they're alive so there's no issues with that
 
 	WaitFrame()
 
@@ -164,13 +176,13 @@ void function FastballPlayer( entity player )
 		{
 			if ( IsValid( player ) )
 			{
-				RemoveCinematicFlag( player, CE_FLAG_INTRO )
+				RemoveCinematicFlag( player, CE_FLAG_CLASSIC_MP_SPAWNING )
 
 				player.ClearParent()
 
 				ClearPlayerAnimViewEntity( player )
+				DeployViewModelAndEnableWeapons( player )
 
-				player.DeployWeapon()
 				player.PlayerCone_Disable()
 				player.ClearInvulnerable()
 				player.kv.VisibilityFlags = ENTITY_VISIBLE_TO_EVERYONE // restore visibility
@@ -200,7 +212,7 @@ void function FastballPlayer( entity player )
 	else
 		buddy = file.imcBuddy
 
-	AddCinematicFlag( player, CE_FLAG_INTRO )
+	AddCinematicFlag( player, CE_FLAG_CLASSIC_MP_SPAWNING )
 
 	// respawn the player
 	player.SetOrigin( buddy.GetOrigin() )
@@ -209,7 +221,8 @@ void function FastballPlayer( entity player )
 
 	player.kv.VisibilityFlags = ENTITY_VISIBLE_TO_NOBODY // better than .Hide(), hides weapons and such
 	player.SetInvulnerable() // in deadly ground we die without this lol
-	player.HolsterWeapon()
+
+	HolsterViewModelAndDisableWeapons( player )
 
 	// fade screen out from black
 	ScreenFadeFromBlack( player, 0.5, 0.5 )

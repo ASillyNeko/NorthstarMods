@@ -13,7 +13,6 @@ void function PrivateMatchModesInit()
 	#endif
 
 	// match settings
-	AddPrivateMatchModeSettingEnum( "#MODE_SETTING_CATEGORY_MATCH", "run_intro", [ "#SETTING_DISABLED", "#SETTING_ENABLED" ], "1" )
 	AddPrivateMatchModeSettingEnum( "#MODE_SETTING_CATEGORY_MATCH", "run_epilogue", [ "#SETTING_DISABLED", "#SETTING_ENABLED" ], "1" )
 	AddPrivateMatchModeSettingArbitrary( "#MODE_SETTING_CATEGORY_MATCH", "scorelimit", "650" )
 	AddPrivateMatchModeSettingArbitrary( "#MODE_SETTING_CATEGORY_MATCH", "roundscorelimit", "0" )
@@ -120,41 +119,17 @@ void function PrivateMatchModesInit()
 	AddPrivateMatchMap( "mp_coliseum_column" )
 
 	// dev settings
-	AddPrivateMatchModeSettingArbitrary( "#MODE_SETTING_CATEGORY_DEV", "maxplayers", "12", "Max Players" )
-	AddPrivateMatchModeSettingArbitrary( "#MODE_SETTING_CATEGORY_DEV", "pick_loadout_extension", "0", "Pick Loadout Extension" )
+	AddPrivateMatchModeSettingArbitrary( "DEV", "maxplayers", "12", "Max Players" )
+	AddPrivateMatchModeSettingArbitrary( "DEV", "pick_loadout_extension", "0", "Pick Loadout Extension" )
 
-	AddPrivateMatchModeSettingEnum( "#MODE_SETTING_CATEGORY_DEV", "classic_mp", [ "Disabled", "Enabled" ], "1", "Classic MP" )
-	AddPrivateMatchModeSettingEnum( "#MODE_SETTING_CATEGORY_DEV", "riff_ai_lethality", [ "Very Low", "Low", "Medium", "High", "Very High" ], "1", "AI Lethality" )
-	AddPrivateMatchModeSettingEnum( "#MODE_SETTING_CATEGORY_DEV", "riff_elimination", [ "Default", "Pilots", "Titan", "Pilots Titans" ], "0", "Elimination" )
-	AddPrivateMatchModeSettingEnum(
-		"#MODE_SETTING_CATEGORY_DEV",
-		"riff_allow_npcs",
-		[ "None", "Default", "Player Controlled Only", "Grunt Only", "Spectre Only" ],
-		"1",
-		"Allow NPCs"
-	)
-	AddPrivateMatchModeSettingEnum( "#MODE_SETTING_CATEGORY_DEV", "riff_spawn_as_titan", [ "Default", "Always", "Script Error", "Never" ], "0", "Spawn As Titan" )
-	AddPrivateMatchModeSettingEnum(
-		"#MODE_SETTING_CATEGORY_DEV",
-		"riff_titan_availability",
-		[ "Default", "Always", "Once", "Never", "Custom" ],
-		"0",
-		"Titan Availability"
-	)
-	AddPrivateMatchModeSettingEnum(
-		"#MODE_SETTING_CATEGORY_DEV",
-		"riff_titan_exit_enabled",
-		[ "Default", "Always", "Never", "Disembark Only" ],
-		"0",
-		"Titan Exit"
-	)
-	AddPrivateMatchModeSettingEnum(
-		"#MODE_SETTING_CATEGORY_DEV",
-		"riff_wave_spawn",
-		[ "Disabled", "Fixed Interval", "Player Death", "Manual", "Dropship" ],
-		"0",
-		"Wave Spawn"
-	)
-	AddPrivateMatchModeSettingEnum( "#MODE_SETTING_CATEGORY_DEV", "run_evac", [ "Default", "Always" ], "0", "Run Evac" )
-	AddPrivateMatchModeSettingEnum( "#MODE_SETTING_CATEGORY_DEV", "script_leak", [ "Disabled", "Enabled" ], "0", "Script leak" )
+	AddPrivateMatchModeSettingEnum( "DEV", "classic_mp", [ "Disabled", "Enabled" ], "1", "Classic MP" )
+	AddPrivateMatchModeSettingEnum( "DEV", "riff_ai_lethality", [ "Very Low", "Low", "Medium", "High", "Very High" ], "1", "AI Lethality" )
+	AddPrivateMatchModeSettingEnum( "DEV", "riff_elimination", [ "Default", "Pilots", "Titan", "Pilots Titans" ], "0", "Elimination" )
+	AddPrivateMatchModeSettingEnum( "DEV", "riff_allow_npcs", [ "None", "Default", "Player Controlled Only", "Grunt Only", "Spectre Only" ], "1", "Allow NPCs" )
+	AddPrivateMatchModeSettingEnum( "DEV", "riff_spawn_as_titan", [ "Default", "Always", "Script Error", "Never" ], "0", "Spawn As Titan" )
+	AddPrivateMatchModeSettingEnum( "DEV", "riff_titan_availability", [ "Default", "Always", "Once", "Never", "Custom" ], "0", "Titan Availability" )
+	AddPrivateMatchModeSettingEnum( "DEV", "riff_titan_exit_enabled", [ "Default", "Always", "Never", "Disembark Only" ], "0", "Titan Exit" )
+	AddPrivateMatchModeSettingEnum( "DEV", "riff_wave_spawn", [ "Disabled", "Fixed Interval", "Player Death", "Manual", "Dropship" ], "0", "Wave Spawn" )
+	AddPrivateMatchModeSettingEnum( "DEV", "run_evac", [ "Default", "Always" ], "0", "Run Evac" )
+	AddPrivateMatchModeSettingEnum( "DEV", "script_leak", [ "Disabled", "Enabled" ], "0", "Script leak" )
 }

@@ -7,12 +7,13 @@ global function WaittillGameStateOrHigher
 global function AddCallback_OnRoundEndCleanup
 
 global function SetTimelimitCompleteFunc
+global function SetPlayLastMinuteMusic
 global function SetPlayThreeMinuteMusic
 global function SetThreeMinuteMusicID
 global function SetPlayThreeMinuteMusicCheck
 global function SetEpilogueEliminationBased
 global function SetSwitchSidesBased
-global function AddGMGetWinnerDeterminedWait
+global function SetCustomWinnerDeterminedLength
 global function AddGMThinkFunc
 global function SetForceNoMoreRounds
 global function SetForceNoFinalRoundDraws
@@ -35,6 +36,7 @@ global function GameState_SetTimeLimitOverride
 global function IsRoundBasedGameOver
 global function GiveTitanToPlayer
 global function CodeCallback_GamerulesThink
+global function CheckMap
 global function GetWinnerDeterminedWait
 global function WillShowRoundWinningKillReplay
 global function ForceEliminationModeWinner
@@ -60,16 +62,23 @@ struct
 
 	array<void functionref()> roundEndCleanupCallbacks
 	bool functionref( entity victim, entity attacker, var damageInfo, bool isRoundEnd ) shouldTryUseProjectileReplayCallback
+
 	bool playingLastMinuteMusic = false
 	bool playingThreeMinuteMusic = false
-	float timeWithPlayers = -1
-	bool endingMatch = false
-	float timeLimitOverride = -1
+	bool shouldPlayLastMinuteMusic = true
 	bool shouldPlayThreeMinuteMusic = false
-	float functionref() gmWinnerDeterminedWait
 	int threeMinuteMusicID = eMusicPieceID.GAMEMODE_1
 	bool functionref( int, float ) shouldPlayThreeMinuteMusicCheck = null
+	float timeWithPlayers = -1
+
+	bool endingMatch = false
+
+	float timeLimitOverride = -1
+
+	float customWinnerDeterminedLength = -1.0
+
 	bool epilogueEliminationBased = true
+
 	array<void functionref()> gmThinkFuncTable
 } file
 
@@ -110,7 +119,16 @@ void function RoundEndTimeVarChanged()
 
 void function GameState_EntitiesDidLoad()
 {
-	ClassicMP_SetupIntro()
+	// try to set up classic MP intro
+	if ( IsMultiplayerPlaylist() )
+	{
+		if ( ClassicMP_CallIntroLevelSetupFunc() )
+			level.classicMP_levelSetupForIntro = true
+
+		// This ensures the intro won't happen if the level isn't set up correctly
+		if ( ClassicMP_IsLevelSetupForIntro() )
+			level.canStillSpawnIntoIntro = true
+	}
 }
 
 void function WaittillGameStateOrHigher( int gameState )
@@ -131,43 +149,9 @@ void function GameState_OnClientConnected( entity player )
 {
 	if (
 		GetGameState() == eGameState.WaitingForPlayers || ( GetGameState() == eGameState.PickLoadout && DoPrematchWarpSound() ) ||
-		GetGameState() == eGameState.Prematch || GetGameState() == eGameState.Postmatch
+		GetGameState() == eGameState.Postmatch
 	)
 		ScreenFadeToBlackForever( player, 0.0 )
-
-	if ( !GetClassicMPMode() && GetGameState() == eGameState.Prematch && !IsPrivateMatchSpectator( player ) )
-		thread NoClassicMPSpawn( player )
-}
-
-void function NoClassicMPSpawn( entity player )
-{
-	if ( ShouldSpawnAsTitan( player ) )
-	{
-		PutPlayerInObserverMode( player, OBS_MODE_STATIC_LOCKED )
-
-		thread void function() : ( player )
-		{
-			WaitEndFrame()
-
-			if ( IsValidPlayer( player ) )
-				ScreenFadeFromBlack( player, 0.0 )
-		}()
-
-		WaittillGameStateOrHigher( eGameState.Playing )
-
-		if ( !IsValidPlayer( player ) )
-			return
-	}
-
-	DecideRespawnPlayer( player )
-
-	if ( IsAlive( player ) )
-	{
-		WaitEndFrame()
-
-		if ( IsValidPlayer( player ) )
-			ScreenFadeFromBlack( player, 0.0 )
-	}
 }
 
 //  This is to move all NPCs that a player owns from one team to the other during a match
@@ -284,7 +268,7 @@ int function GetCodeMatchPhaseForGameState()
 			return MATCHPHASE_EPILOGUE
 
 		default:
-			printt( " ** Warning: GetCodeMatchPhaseForGameState() - Unhandeled eGameState", gameState )
+			Warning( "GetCodeMatchPhaseForGameState() - Unhandled eGameState " + gameState )
 	}
 
 	return MATCHPHASE_UNSPECIFIED
@@ -517,9 +501,6 @@ void function SetWinner( int winningTeam, int winReason, string winReasonText, s
 			else
 				Remote_CallFunction_NonReplay( player, "ServerCallback_AnnounceWinner", 0, announcementSubstr, GetWinnerDeterminedWait() )
 		}
-
-		if ( player.GetTeam() == winningTeam )
-			UnlockAchievement( player, achievements.MP_WIN )
 	}
 
 	SetServerVar( "winningTeam", GetWinningTeam() ) // This is to make GetWinningTeam return TEAM_UNASSIGNED for clients so they don't crash due to music logic upon entering WinnerDetermined state
@@ -540,6 +521,11 @@ void function AddCallback_OnRoundEndCleanup( void functionref() callback )
 void function SetTimelimitCompleteFunc( bool functionref() timeLimitCompleteFunc )
 {
 	svGlobal.timelimitCompleteFunc = timeLimitCompleteFunc
+}
+
+void function SetPlayLastMinuteMusic( bool value )
+{
+	file.shouldPlayLastMinuteMusic = value
 }
 
 void function SetPlayThreeMinuteMusic( bool value )
@@ -567,9 +553,9 @@ void function SetSwitchSidesBased( bool switchSides )
 	level.nv.switchedSides = switchSides ? 0 : null
 }
 
-void function AddGMGetWinnerDeterminedWait( float functionref() value )
+void function SetCustomWinnerDeterminedLength( float len )
 {
-	file.gmWinnerDeterminedWait = value
+	file.customWinnerDeterminedLength = len
 }
 
 void function AddGMThinkFunc( void functionref() value )
@@ -638,6 +624,77 @@ void function SetGameLostAnnouncement( string announcement )
 	svGlobal.gameLostAnnouncement = announcement
 }
 
+void function CheckMap()
+{
+	// look for titan starts
+	// check if there are 6 of the militia team, 6 imc team
+	array<entity> titan_starts_array = GetEntArrayByClass_Expensive( "info_spawnpoint_titan_start" )
+	int titan_starts = titan_starts_array.len()
+
+	printl( titan_starts + " (12 min) info_spawnpoint_titan_start entities" )
+
+	int militia_starts = 0
+	int imc_starts = 0
+
+	foreach ( start in titan_starts_array )
+	{
+		if ( start.GetTeam() == TEAM_MILITIA )
+			militia_starts++
+
+		if ( start.GetTeam() == TEAM_IMC )
+			imc_starts++
+	}
+
+	printl( militia_starts + " (6 min) info_spawnpoint_titan_start entities for team MILITIA" )
+	printl( imc_starts + " (6 min) info_spawnpoint_titan_start entities for team IMC" )
+
+	// look for titan spawns
+	int titan_spawns = GetEntArrayByClass_Expensive( "info_spawnpoint_titan" ).len()
+
+	printl( titan_spawns + " (6 min) info_spawnpoint_titan entities" )
+
+	// look for human spawns
+	int human_spawns = GetEntArrayByClass_Expensive( "info_spawnpoint_human" ).len()
+
+	printl( human_spawns + " (6 min) info_spawnpoint_human entities" )
+
+	// look for NPC starts
+	// check if there are 6 of the militia team, 6 imc team
+	array<entity> npc_starts_array = SpawnPoints_GetDropPodStart( TEAM_ANY )
+	int npc_starts = npc_starts_array.len()
+
+	printl( npc_starts + " (12 min) info_spawnpoint_droppod_start entities" )
+
+	int militia_npc_starts = 0
+	int imc_npc_starts = 0
+
+	foreach ( start in npc_starts_array )
+	{
+		if ( start.GetTeam() == TEAM_MILITIA )
+			militia_npc_starts++
+		if ( start.GetTeam() == TEAM_IMC )
+			imc_npc_starts++
+	}
+
+	printl( militia_npc_starts + " (6 min) info_spawnpoint_droppod_start entities for team MILITIA " )
+	printl( imc_npc_starts + " (6 min) info_spawnpoint_droppod_start entities for team IMC" )
+
+	// look for NPC spawns
+	int npc_spawns = SpawnPoints_GetDropPod().len()
+
+	printl( npc_spawns + " (6 min) info_spawnpoint_droppod entities" )
+
+	Assert( titan_starts >= 12, "Less than 12 info_spawnpoint_titan_start entities" )
+	Assert( militia_starts >= 6, "Less than 6 info_spawnpoint_titan_start entities for team MILITIA" )
+	Assert( imc_starts >= 6, "Less than 6 info_spawnpoint_titan_start entities for team IMC" )
+	Assert( titan_spawns >= 6, "Less than 6 info_spawnpoint_titan entities" )
+	Assert( human_spawns >= 6, "Less than 6 info_spawnpoint_human entities" )
+	Assert( npc_starts >= 12, "Less than 12 info_spawnpoint_droppod_start entities" )
+	Assert( militia_npc_starts >= 6, "Less than 6 info_spawnpoint_droppod_start entities for team MILITIA" )
+	Assert( imc_npc_starts >= 6, "Less than 6 info_spawnpoint_droppod_start entities for team IMC" )
+	Assert( npc_spawns >= 6, "Less than 6 info_spawnpoint_droppod entities" )
+}
+
 /*
  ██████ ██    ██ ███████ ████████  ██████  ███    ███     ███████ ████████  █████  ██████  ████████
 ██      ██    ██ ██         ██    ██    ██ ████  ████     ██         ██    ██   ██ ██   ██    ██
@@ -678,7 +735,7 @@ void function GameRulesThink_WaitingForPlayers()
 	if ( !DoneWaitingForPlayers() )
 		return
 
-	if ( GetClassicMPMode() && !IsFFAGame() )
+	if ( IsMultiplayerPlaylist() && !IsFFAGame() )
 		SetGameState( eGameState.PickLoadout )
 	else
 		SetGameState( eGameState.Prematch )
@@ -821,18 +878,13 @@ void function GameStateEnter_Prematch()
 
 	foreach ( entity player in players )
 	{
-		if ( IsPrivateMatchSpectator( player ) )
-			thread ObserverThread( player )
-		else
+		if ( !IsPrivateMatchSpectator( player ) )
 			ClearPlayerEliminated( player )
 
 		UnMuteAll( player )
 	}
 
-	if ( !GetClassicMPMode() )
-		foreach ( entity player in GetPlayerArray() )
-			if ( !IsPrivateMatchSpectator( player ) )
-				thread NoClassicMPSpawn( player )
+	thread GameStartSpawnPlayers()
 }
 
 void function GameRulesThink_Prematch()
@@ -845,20 +897,6 @@ void function GameRulesThink_Prematch()
 	level.nv.winningTeam = null
 
 	GameRules_MarkGameStatePrematchEnding()
-}
-
-void function SetPrematchStartTime()
-{
-	if ( GetClassicMPMode() )
-	{
-		SetServerVar( "roundStartTime", Time() + ClassicMP_GetIntroLength() )
-		SetServerVar( "gameStartTime", Time() + ClassicMP_GetIntroLength() )
-	}
-	else
-	{
-		SetServerVar( "roundStartTime", Time() + 3.0 )
-		SetServerVar( "gameStartTime", Time() + 3.0 )
-	}
 }
 
 /*
@@ -1022,12 +1060,15 @@ void function GameStateEnter_WinnerDetermined()
 	}
 
 	GameRules_MarkGameStateWinnerDetermined()
-	AnnounceWinner( GetWinningTeam() )
+
+	int winningTeam = GetWinningTeam()
+
+	AnnounceWinner( winningTeam )
 
 	level.nv.gameEndTime = Time()
 
 	CreateLevelWinnerDeterminedMusicEvent()
-	thread ScoreEvent_MatchComplete( GetWinningTeam() )
+	thread ScoreEvent_MatchComplete( winningTeam )
 	RegisterMatchStats_OnMatchComplete()
 
 	array<entity> players = GetPlayerArray()
@@ -1036,6 +1077,9 @@ void function GameStateEnter_WinnerDetermined()
 	{
 		UpdatePlayerWins( player )
 		PopulatePostgameData( player )
+
+		if ( player.GetTeam() == winningTeam )
+			UnlockAchievement( player, achievements.MP_WIN )
 	}
 
 	level.ui.penalizeDisconnect = false
@@ -1050,11 +1094,11 @@ void function GameStateEnter_WinnerDetermined()
 	else if ( ShouldRunEvac() ) // RoundWinningKillReplay doesn't work with Evac!
 	{
 		thread RegisterChallenges_OnMatchEnd()
-		ClassicMP_SetupEpilogue()
+		EvacEpilogueSetup()
 		SetGameState( eGameState.Epilogue )
 	}
 
-	if ( GetClassicMPMode() )
+	if ( IsMultiplayerPlaylist() )
 		svGlobal.levelEnt.Signal( "StratonHornetDogfights" ) // Stop skyshow for classic MP
 
 	CheckForEmptyTeamVictory()
@@ -1082,7 +1126,7 @@ void function GameRulesThink_WinnerDetermined()
 
 		if ( ShouldRunEvac() )
 		{
-			ClassicMP_SetupEpilogue()
+			EvacEpilogueSetup()
 			SetGameState( eGameState.Epilogue )
 		}
 		else
@@ -1097,7 +1141,7 @@ void function GameRulesThink_WinnerDetermined()
 
 		if ( ShouldRunEvac() )
 		{
-			ClassicMP_SetupEpilogue()
+			EvacEpilogueSetup()
 			SetGameState( eGameState.Epilogue )
 		}
 		else
@@ -1119,7 +1163,7 @@ void function GameRulesThink_WinnerDetermined()
 		return
 	}
 
-	if ( GetClassicMPMode() && !DoPrematchWarpSound() && GetCurrentPlaylistVarInt( "pick_loadout_every_round", 0 ) )
+	if ( IsMultiplayerPlaylist() && !DoPrematchWarpSound() && GetCurrentPlaylistVarInt( "pick_loadout_every_round", 0 ) )
 		SetGameState( eGameState.PickLoadout )
 	else
 		SetGameState( eGameState.Prematch )
@@ -1191,7 +1235,7 @@ void function GameRulesThink_SwitchingSides()
 
 	AllPlayersUnMuteAll()
 
-	if ( GetClassicMPMode() && !DoPrematchWarpSound() && GetCurrentPlaylistVarInt( "pick_loadout_every_round", 0 ) )
+	if ( IsMultiplayerPlaylist() && !DoPrematchWarpSound() && GetCurrentPlaylistVarInt( "pick_loadout_every_round", 0 ) )
 		SetGameState( eGameState.PickLoadout )
 	else
 		SetGameState( eGameState.Prematch )
@@ -1984,7 +2028,7 @@ bool function TimeLimit_Complete()
 		bool playLastMinuteMusic = false
 		bool playThreeMinuteMusic = false
 
-		if ( GetCurrentPlaylistVarInt( "last_minute_music_enabled", 1 ) && timeLeftSeconds <= 60 )
+		if ( GetCurrentPlaylistVarInt( "last_minute_music_enabled", 1 ) && file.shouldPlayLastMinuteMusic && timeLeftSeconds <= 60 )
 		{
 			playLastMinuteMusic = true
 
@@ -2113,8 +2157,8 @@ bool function ShouldClearPlayersInWinnerDetermined()
 
 float function GetWinnerDeterminedWait()
 {
-	if ( file.gmWinnerDeterminedWait != null )
-		return file.gmWinnerDeterminedWait()
+	if ( file.customWinnerDeterminedLength >= 0.0 )
+		return file.customWinnerDeterminedLength
 
 	if ( IsRoundBased() )
 	{
@@ -2535,5 +2579,70 @@ void function PlayerEnterEndRoundState( entity player )
 		default:
 			player.FreezeControlsOnServer()
 			break
+	}
+}
+
+void function GameStartSpawnPlayers()
+{
+	array<entity> players = GetPlayerArray()
+
+	if ( IsMultiplayerPlaylist() )
+	{
+		if ( ClassicMP_CanUseIntroStartSpawn() )
+			ClassicMP_CallPrematchSpawnPlayersFunc( players )
+		else
+			foreach ( entity player in players )
+				if ( !IsAlive( player ) && !IsValid( player.isSpawning ) )
+					ScreenFadeFromBlack( player, 1.0, 1.0 )
+	}
+	else
+		foreach ( entity player in players )
+			if ( !IsAlive( player ) && !IsValid( player.isSpawning ) )
+				ScreenFadeFromBlack( player, 0.0, 0.0 )
+
+	if ( ShouldIntroSpawnAsTitan() )
+	{
+		foreach ( entity player in players )
+		{
+			if ( IsAlive( player ) )
+				continue
+
+			if ( IsValid( player.isSpawning ) )
+				continue
+
+			PutPlayerInObserverMode( player, OBS_MODE_STATIC_LOCKED )
+		}
+
+		WaittillGameStateOrHigher( eGameState.Playing )
+	}
+
+	foreach ( entity player in players )
+	{
+		if ( !IsValid( player ) )
+			continue
+
+		if ( IsAlive( player ) )
+			continue
+
+		if ( IsValid( player.isSpawning ) )
+			continue
+
+		DecideRespawnPlayer( player )
+	}
+}
+
+void function SetPrematchStartTime()
+{
+	if ( IsMultiplayerPlaylist() )
+	{
+		var customIntroLength = level.customIntroLength != null ? level.customIntroLength : 15.0
+
+		SetServerVar( "roundStartTime", Time() + customIntroLength )
+		SetServerVar( "gameStartTime", Time() + customIntroLength )
+	}
+	else
+	{
+		SetServerVar( "roundStartTime", Time() + 3.0 )
+		SetServerVar( "gameStartTime", Time() + 3.0 )
 	}
 }

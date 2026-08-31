@@ -107,7 +107,7 @@ void function SpawnWave_Init()
 {
 	RegisterSignal( "StopWaveSpawner" )
 
-	file.difficultyLevel = FD_GetDifficultyLevel() // Refresh this only on map load, to avoid midgame commands messing up with difficulties (i.e setting mp_gamemode fd_hard midgame in a regular match through console on local host would immediately make Stalkers spawns with EPG)
+	file.difficultyLevel = GetDifficultyLevel() // Refresh this only on map load, to avoid midgame commands messing up with difficulties (i.e setting mp_gamemode fd_hard midgame in a regular match through console on local host would immediately make Stalkers spawns with EPG)
 	file.gruntAmountWithShields = GetCurrentPlaylistVarInt( "fd_grunt_shield_captains", 0 )
 	file.gruntAmountWithATWeapons = GetCurrentPlaylistVarInt( "fd_grunt_at_weapon_users", 0 )
 }

@@ -96,7 +96,7 @@ void function AddPlayerScore( entity targetPlayer, string scoreEventName, entity
 		ownValue *= pilotScaleVar
 	}
 
-	if ( !IsPrivateMatch() )
+	if ( !IsPrivateMatch() || event.displayType & eEventDisplayType.MEDAL_FORCED ) // fd medals always need to be send to client so they show up in wave bonuses
 		Remote_CallFunction_NonReplay(
 			targetPlayer,
 			"ServerCallback_ScoreEvent",

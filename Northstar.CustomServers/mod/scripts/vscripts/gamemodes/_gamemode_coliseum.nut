@@ -37,11 +37,13 @@ void function GamemodeColiseum_Init()
 	SetLoadoutGracePeriodEnabled( false ) // prevent modifying loadouts with grace period
 	SetWeaponDropsEnabled( false ) // removes all dropped weapons
 
-	ClassicMP_SetCustomIntro( ClassicMP_DefaultNoIntro_Setup, 8.5 )
+	ClassicMP_SetIntroPlayerSpawnFunc( ClassicMP_NoIntro )
+	SetCustomIntroLength( 8.5 )
+
 	AddCallback_GameStateEnter( eGameState.Prematch, ShowColiseumIntroScreen )
 
-	ClassicMP_SetEpilogue( SetupColiseumEpilogue )
-	ClassicMP_RunEpilogueWithDeadPlayers( true )
+	SetCustomEvacFunc( SetupColiseumEpilogue )
+	RunEpilogueWithDeadPlayers( true )
 
 	AddCallback_GameStateEnter( eGameState.Playing, IncreaseColiseumRoundsPlayed )
 	AddCallback_OnClientDisconnected( Coliseum_OnClientDisconnected )

@@ -12,7 +12,15 @@ struct
 
 void function CodeCallback_MapInit()
 {
-	AddCallback_EntitiesDidLoad( AddEvacNodes )
+	PrecacheParticleSystem( FX_POD_SCREEN_IN )
+	PrecacheParticleSystem( $"P_pod_scan_laser_FP" )
+	PrecacheParticleSystem( $"P_pod_Dlight_console1" )
+	PrecacheParticleSystem( $"P_pod_Dlight_console2" )
+	PrecacheParticleSystem( $"P_pod_door_glow_FP" )
+
+	PrecacheModel( $"models/titans/ogre/ogreposeopen.mdl" )
+
+	AddCallback_EntitiesDidLoad( EntitiesDidLoad )
 
 	// dissolve effects
 	AddDeathCallback( "player", WargamesDissolveDeadEntity )
@@ -24,21 +32,67 @@ void function CodeCallback_MapInit()
 	AddSpawnCallback( "info_spawnpoint_marvin", AddMarvinSpawner )
 	AddCallback_GameStateEnter( eGameState.Prematch, SpawnMarvinsForRound )
 
+	if ( ShouldDoTrainingPodIntro() && !Flag( "ClassicMP_UsingCustomIntro" ) )
+	{
+		ClassicMP_SetIntroLevelSetupFunc( WargamesCanRunIntro )
+		ClassicMP_SetIntroPlayerSpawnFunc( WargamesIntroPlayerSpawn )
+		ClassicMP_SetPrematchSpawnPlayersFunc( WargamesIntroPrematchSpawnPlayers )
+		AddCallback_GameStateEnter(
+			eGameState.Prematch,
+			void function() : ()
+			{
+				if ( ShouldDoTrainingPodIntro() && ClassicMP_CanUseIntroStartSpawn() )
+					SetCustomIntroLength( 21.6 ) // because map init scripts are after classic mp init, we need to do it here
+			}
+		)
+	}
+
 	// Load Frontier Defense Data
 	if ( GameRules_GetGameMode() == FD )
 		initFrontierDefenseData()
-	else if ( !IsFFAGame() && GetCurrentPlaylistVarInt( "run_intro", 1 ) )
-		ClassicMP_SetLevelIntro( WargamesIntroSetup, 21.6 )
 }
 
-void function AddEvacNodes()
+void function EntitiesDidLoad()
 {
+	file.militiaPod = GetEnt( "training_pod" )
+	file.imcPod = GetEnt( "training_pod_imc" )
+
 	AddEvacNode( GetEnt( "evac_location1" ) )
 	AddEvacNode( GetEnt( "evac_location2" ) )
 	AddEvacNode( GetEnt( "evac_location3" ) )
 	AddEvacNode( GetEnt( "evac_location4" ) )
 
 	SetEvacSpaceNode( GetEnt( "end_spacenode" ) )
+}
+
+bool function WargamesCanRunIntro()
+{
+	// If riffs are set to be a Titan immediately, just drop in as a titan
+	if ( ShouldIntroSpawnAsTitan() )
+		return false
+
+	// only support gamemodes with less than 3 teams
+	if ( IsFFAGame() )
+		return false
+
+	return true
+}
+
+bool function WargamesIntroPlayerSpawn( entity player )
+{
+	WargamesIntro_AddPlayer( player )
+
+	return true
+}
+
+bool function WargamesIntroPrematchSpawnPlayers( array<entity> players )
+{
+	thread WargamesIntro_Start()
+
+	foreach ( entity player in players )
+		player.UnfreezeControlsOnServer()
+
+	return true
 }
 
 // dissolve effects
@@ -111,42 +165,13 @@ void function SpawnMarvinsForRound()
 	}
 }
 
-// intro stuff:
-void function WargamesIntroSetup()
-{
-	PrecacheParticleSystem( FX_POD_SCREEN_IN )
-	PrecacheParticleSystem( $"P_pod_scan_laser_FP" )
-	PrecacheParticleSystem( $"P_pod_Dlight_console1" )
-	PrecacheParticleSystem( $"P_pod_Dlight_console2" )
-	PrecacheParticleSystem( $"P_pod_door_glow_FP" )
-
-	PrecacheModel( $"models/titans/ogre/ogreposeopen.mdl" )
-
-	file.militiaPod = GetEnt( "training_pod" )
-	file.imcPod = GetEnt( "training_pod_imc" )
-
-	AddCallback_OnClientConnected( WargamesIntro_AddPlayer )
-	AddCallback_GameStateEnter( eGameState.Prematch, OnPrematchStart )
-}
-
 void function WargamesIntro_AddPlayer( entity player )
 {
-	if ( GetGameState() != eGameState.Prematch )
-		return
-
-	if ( !IsPrivateMatchSpectator( player ) )
-		thread PlayerWatchesWargamesIntro( player )
+	thread PlayerWatchesWargamesIntro( player )
 }
 
-void function OnPrematchStart()
+void function WargamesIntro_Start()
 {
-	if ( !IsNewThread() )
-	{
-		thread OnPrematchStart()
-		return
-	}
-
-	ClassicMP_OnIntroStarted()
 	file.introStartTime = Time()
 
 	// set up shared objects
@@ -347,8 +372,6 @@ void function OnPrematchStart()
 		}
 	}
 
-	ClassicMP_OnIntroFinished()
-
 	// make sure we stop using viewmodels for these otherwise everyone can see them in the floor 24/7
 	file.imcPod.RenderWithViewModels( false )
 	file.militiaPod.RenderWithViewModels( false )
@@ -475,7 +498,16 @@ void function PlayerWatchesWargamesIntro( entity player )
 
 	thread FirstPersonSequence( sequence, player, playerPod )
 
-	DelayedFrame( player )
+	thread void function() : ( player )
+	{
+		player.EndSignal( "OnDestroy" )
+
+		WaitEndFrame()
+
+		HolsterViewModelAndDisableWeapons( player )
+
+		ScreenFadeFromBlack( player, 0.5, 0.5 )
+	}()
 
 	// 8 seconds of nothing before we start the pod sequence
 	wait ( file.introStartTime + 8.0 ) - Time()
@@ -743,15 +775,4 @@ void function PodFXCleanup( entity pod )
 
 		rightEmitter.Destroy()
 	}
-}
-
-void function DelayedFrame( entity player )
-{
-	player.EndSignal( "OnDestroy" )
-
-	WaitEndFrame()
-
-	HolsterViewModelAndDisableWeapons( player )
-
-	ScreenFadeFromBlack( player, 0.5, 0.5 )
 }

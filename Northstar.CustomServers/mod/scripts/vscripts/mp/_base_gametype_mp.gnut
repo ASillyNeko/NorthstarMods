@@ -213,7 +213,11 @@ void function CodeCallback_OnClientConnectionCompleted( entity player )
 	else if ( GetGameState() == eGameState.SwitchingSides )
 		SetPlayerEliminated( player )
 
-	if ( IsPrivateMatchSpectator( player ) )
+	if ( GetGameState() == eGameState.Prematch )
+	{
+		DecideRespawnPlayer( player )
+	}
+	else if ( IsPrivateMatchSpectator( player ) )
 	{
 		delaythread( 0.25 ) DecideRespawnPlayer( player )
 	}
@@ -222,10 +226,13 @@ void function CodeCallback_OnClientConnectionCompleted( entity player )
 		player.SetPersistentVar( "privateMatchState", 0 )
 
 		// handle spawning late joiners
-		if ( GetClassicMPMode() && GetGameState() >= eGameState.Playing && GetCurrentPlaylistVarInt( "tts_menu_join_in_progress", 0 ) == 1 )
-			thread SpectateTTSMenuPlayer( player )
-		else if ( GetGameState() >= eGameState.Playing || ( GetClassicMPMode() && ShouldSpawnAsTitan( player ) && GetGameState() == eGameState.Prematch ) )
-			delaythread( 0.25 ) DecideRespawnPlayer( player )
+		if ( GetGameState() >= eGameState.Playing )
+		{
+			if ( GetCurrentPlaylistVarInt( "tts_menu_join_in_progress", 0 ) == 1 )
+				thread SpectateTTSMenuPlayer( player )
+			else
+				delaythread( 0.25 ) DecideRespawnPlayer( player )
+		}
 	}
 }
 
@@ -813,6 +820,16 @@ bool function DecideRespawnPlayer( entity player )
 	else
 		player.StopObserverMode()
 
+	if ( IsMultiplayerPlaylist() )
+	{
+		// if we're in the intro, spawn the player in a special way
+		if ( ClassicMP_TryPlayerIntroSpawn( player ) )
+		{
+			printt( "DecideRespawnPlayer() - ClassicMP_TryPlayerIntroSpawn() was true:", string( player ) )
+			return true
+		}
+	}
+
 	if ( CanSpawnIntoWaveSpawnDropship( player ) )
 	{
 		thread DoWaveSpawnByDropship( player )
@@ -1065,14 +1082,35 @@ void function TryGameModeAnnouncement( entity player )
 	player.EndSignal( "OnDestroy" )
 	player.EndSignal( "OnDeath" )
 
-	while ( HasCinematicFlag( player, CE_FLAG_INTRO ) || HasCinematicFlag( player, CE_FLAG_CLASSIC_MP_SPAWNING ) )
-		player.WaitSignal( "CE_FLAGS_CHANGED" )
+	if ( IsMultiplayerPlaylist() )
+	{
+		WaittillGameStateOrHigher( eGameState.Playing )
+
+		while ( HasCinematicFlag( player, CE_FLAG_INTRO ) || HasCinematicFlag( player, CE_FLAG_CLASSIC_MP_SPAWNING ) )
+			player.WaitSignal( "CE_FLAGS_CHANGED" )
+	}
 
 	wait player.p.connectTime - Time() + 2.0
 
 	file.hasRunGamemodeAnnouncementForPlayer[ player ] <- expect int( level.nv.roundsPlayed )
 
-	PlayFactionDialogueToPlayer( GameMode_GetGameModeAnnouncement( GAMETYPE ), player )
+	if ( GetGameState() <= eGameState.Playing )
+	{
+		var attackingTeam = level.nv.attackingTeam
+
+		Assert( GameMode_IsDefined( GAMETYPE ) ) // Only game modes that use new style of script should be using this
+
+		if ( attackingTeam != null ) // asymmetric game mode announcement
+		{
+			if ( player.GetTeam() == attackingTeam )
+				PlayFactionDialogueToPlayer( GameMode_GetGameModeAttackAnnouncement( GAMETYPE ), player )
+			else
+				PlayFactionDialogueToPlayer( GameMode_GetGameModeDefendAnnouncement( GAMETYPE ), player )
+		}
+		else
+			PlayFactionDialogueToPlayer( GameMode_GetGameModeAnnouncement( GAMETYPE ), player ) // Symmetric game mode announcement
+	}
+
 	Remote_CallFunction_NonReplay( player, "ServerCallback_GameModeAnnouncement" )
 }
 
@@ -1144,9 +1182,6 @@ bool function ShouldEntTakeDamage_SPMP( entity ent, var damageInfo )
 
 float function GetTitanBuildTime( entity player )
 {
-	if ( player.titansBuilt == 0 )
-		return GetCurrentPlaylistVarFloat( "titan_build_time", 180 )
-
 	return GetCurrentPlaylistVarFloat( "titan_rebuild_time", 180 )
 }
 

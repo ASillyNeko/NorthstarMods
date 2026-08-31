@@ -15,6 +15,7 @@ void function GamemodeSpeedball_Init()
 	// gamemode settings
 	SetRoundBased( true )
 	SetSwitchSidesBased( true )
+	SetPlayLastMinuteMusic( false )
 	SetForceNoFinalRoundDraws( true )
 	SetShouldUseRoundWinningKillReplay( true )
 	Riff_ForceTitanAvailability( eTitanAvailability.Never )
@@ -31,7 +32,7 @@ void function GamemodeSpeedball_Init()
 	SetTimelimitCompleteFunc( TimelimitCheckFlagHolder )
 	AddCallback_OnRoundEndCleanup( ResetFlag )
 
-	ClassicMP_SetCustomIntro( ClassicMP_DefaultNoIntro_Setup, ClassicMP_DefaultNoIntro_GetLength() )
+	ClassicMP_SetIntroPlayerSpawnFunc( ClassicMP_NoIntro )
 
 	level.endOfRoundPlayerState = ENDROUND_MOVEONLY
 }

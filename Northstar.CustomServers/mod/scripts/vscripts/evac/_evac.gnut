@@ -1,7 +1,9 @@
 untyped
+
 global function Evac_Init
 global function AddEvacNode
 global function SetEvacSpaceNode
+global function SetCustomEvacFunc
 global function IsEvacDropship
 
 global function EvacEpilogueSetup
@@ -17,18 +19,6 @@ const float EVAC_WAIT_TIME = 18.0
 
 const int EVAC_SHIP_HEALTH = 25000
 const int EVAC_SHIP_SHIELDS = 2000
-
-// we don't use these because they're busted, just keeping them
-const array<string> EVAC_EMBARK_ANIMS_1P = [
-	"ptpov_e3_rescue_side_embark_A",
-	"ptpov_e3_rescue_side_embark_B",
-	"ptpov_e3_rescue_side_embark_C",
-	"ptpov_e3_rescue_side_embark_D",
-	"ptpov_e3_rescue_side_embark_E",
-	"ptpov_e3_rescue_side_embark_F",
-	"ptpov_e3_rescue_side_embark_G",
-	"ptpov_e3_rescue_side_embark_H"
-]
 
 const array<string> EVAC_EMBARK_ANIMS_3P = [
 	"pt_e3_rescue_side_embark_A",
@@ -74,6 +64,7 @@ struct
 	entity evacIcon
 
 	table<entity, bool> shouldHolsterWeapons
+	void functionref() customEvacFunc
 } file
 
 struct EvacShipSetting
@@ -103,6 +94,11 @@ void function SetEvacSpaceNode( entity spaceNode )
 	file.spaceNode = spaceNode
 }
 
+void function SetCustomEvacFunc( void functionref() value )
+{
+	file.customEvacFunc = value
+}
+
 bool function IsEvacDropship( entity ent )
 {
 	return file.evacDropship == ent && IsValid( file.evacDropship )
@@ -111,6 +107,12 @@ bool function IsEvacDropship( entity ent )
 // evac epilogue
 void function EvacEpilogueSetup()
 {
+	if ( file.customEvacFunc != null )
+	{
+		file.customEvacFunc()
+		return
+	}
+
 	// don't do much here because other scripts should be able to call evac stuff themselves
 	AddCallback_GameStateEnter( eGameState.Epilogue, EvacEpilogue )
 	AddCallback_OnPlayerKilled( OnPlayerDeath )
@@ -522,7 +524,6 @@ void function AddPlayerToEvacDropship( entity dropship, entity player )
 
 	FirstPersonSequenceStruct fp
 
-	// fp.firstPersonAnim = EVAC_EMBARK_ANIMS_1P[ slot ]
 	fp.thirdPersonAnim = EVAC_EMBARK_ANIMS_3P[ slot ]
 	fp.firstPersonAnimIdle = EVAC_IDLE_ANIMS_1P[ slot ]
 	fp.thirdPersonAnimIdle = EVAC_IDLE_ANIMS_3P[ slot ]

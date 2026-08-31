@@ -18,8 +18,7 @@ void function GamemodeMfd_Init()
 	{
 		Riff_ForceSetSpawnAsTitan( eSpawnAsTitan.Always )
 		Riff_ForceTitanExitEnabled( eTitanExitEnabled.Never )
-		ClassicMP_SetCustomIntro( ClassicMP_DefaultNoIntro_Setup, ClassicMP_DefaultNoIntro_GetLength() )
-		ClassicMP_ForceDisableEpilogue( true )
+		GameMode_SetEvacEnabled( MARKED_FOR_DEATH, false )
 	}
 
 	AddCallback_OnClientConnected( SetupMFDPlayer )

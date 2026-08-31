@@ -14,8 +14,6 @@ void function GamemodeTTDM_Init()
 	SetLoadoutGracePeriodEnabled( false )
 	SetPlayThreeMinuteMusic( true )
 
-	ClassicMP_SetCustomIntro( ClassicMP_DefaultNoIntro_Setup, ClassicMP_DefaultNoIntro_GetLength() )
-
 	AddCallback_OnClientConnected( SetupPlayerTTDMChallenges ) // Just to make up the Match Goals tracking
 	AddCallback_OnClientDisconnected( RemovePlayerTTDMChallenges ) // Safety removal of data to prevent crashes
 	AddCallback_OnPlayerKilled( AddTeamScoreForPlayerKilled ) // dont have to track autotitan kills since you cant leave your titan in this mode

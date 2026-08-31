@@ -148,14 +148,6 @@
 			"RunOn": "CLIENT || SERVER"
 		},
 		{
-			"Path": "mp/_classic_mp_dropship_intro.gnut",
-			"RunOn": "SERVER && MP"
-		},
-		{
-			"Path": "mp/_classic_mp_no_intro.gnut",
-			"RunOn": "SERVER && MP"
-		},
-		{
 			"Path": "lobby/sh_private_lobby_modes_init.gnut",
 			"RunOn": "MP"
 		},

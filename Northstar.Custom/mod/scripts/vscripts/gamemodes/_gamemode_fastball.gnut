@@ -13,6 +13,8 @@ void function GamemodeFastball_Init()
 	// used for intro
 	PrecacheModel( $"models/titans/buddy/titan_buddy.mdl" )
 	PrecacheParticleSystem( $"P_BT_eye_SM" )
+	RegisterSignal( "fastball_start_throw" )
+	RegisterSignal( "fastball_release" )
 
 	// used for respawn
 	PrecacheParticleSystem( $"P_pod_screen_lasers_OUT" )
@@ -24,8 +26,10 @@ void function GamemodeFastball_Init()
 	Riff_ForceSetEliminationMode( eEliminationMode.Pilots )
 	ScoreEvent_SetupEarnMeterValuesForMixedModes()
 
-	// implementing intro in a different file because it'll likely be big
-	ClassicMP_SetCustomIntro( GamemodeFastballIntroSetup, 14.7 )
+	// implementing intro in a different file because its big
+	ClassicMP_SetIntroLevelSetupFunc( FastballCanRunIntro )
+	ClassicMP_SetIntroPlayerSpawnFunc( FastballIntroPlayerSpawn )
+	ClassicMP_SetPrematchSpawnPlayersFunc( FastballIntroPrematchSpawnPlayers )
 
 	AddCallback_EntitiesDidLoad( SpawnPanelsForLevel )
 	AddCallback_GameStateEnter( eGameState.Prematch, ResetPanels )

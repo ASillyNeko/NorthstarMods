@@ -12,6 +12,7 @@ global enum WINLOSS_HISTORY
 struct
 {
 	array<void functionref( entity )> persistenceDisconnectCallbacks
+	bool runEpilogueWithDeadPlayers = false
 } file
 
 void function Utility_MP_Init()
@@ -237,7 +238,7 @@ void function SetupLiveFireMaps()
 {
 	FlagSet( "LevelHasRoof" )
 	Riff_ForceTitanAvailability( eTitanAvailability.Never )
-	ClassicMP_SetLevelIntro( ClassicMP_DefaultNoIntro_Setup, ClassicMP_DefaultNoIntro_GetLength() )
+	ClassicMP_SetIntroPlayerSpawnFunc( ClassicMP_NoIntro )
 }
 
 void function SetWeaponDropsEnabled( bool enabled )
@@ -250,7 +251,47 @@ void function SetWeaponDropsEnabled( bool enabled )
 
 bool function ShouldRunEvac()
 {
-	return GameMode_GetEvacEnabled( GAMETYPE ) && ClassicMP_ShouldRunEpilogue()
+	if ( IsFFAGame() )
+		return false
+
+	int winningTeam = GetWinningTeam()
+
+	if ( !IsIMCOrMilitiaTeam( winningTeam ) )
+		return false
+
+	if ( !GetCurrentPlaylistVarInt( "run_evac", 0 ) )
+	{
+		if ( !file.runEpilogueWithDeadPlayers && IsPilotEliminationBased() && IsTeamEliminated( GetOtherTeam( winningTeam ) ) )
+			return false
+
+		// there needs to be atleast 1 player on each team before running epilogue
+		if ( GetCurrentPlaylistVarInt( "max_teams", 2 ) != 1 )
+		{
+			int winningPlayers = 0
+			int losingPlayers = 0
+
+			foreach ( entity player in GetPlayerArray() )
+			{
+				if ( IsValidPlayer( player ) && !IsPrivateMatchSpectator( player ) )
+				{
+					if ( player.GetTeam() == winningTeam )
+						winningPlayers++
+					else
+						losingPlayers++
+				}
+			}
+
+			if ( !winningPlayers || !losingPlayers )
+				return false
+		}
+	}
+
+	return GameMode_GetEvacEnabled( GAMETYPE ) && GetCurrentPlaylistVarInt( "run_epilogue", 1 ) != 0
+}
+
+void function RunEpilogueWithDeadPlayers( bool enabled )
+{
+	file.runEpilogueWithDeadPlayers = enabled
 }
 
 bool function IsRefValidAndOfType( string ref, int itemType )
@@ -598,4 +639,10 @@ float function GetScoreNeededRatio()
 	// scoreLimit + ", scoreNeededRatio: " + ( winningTeamLeftToScore.tofloat() / losingTeamLeftToScore ) )
 
 	return winningTeamLeftToScore.tofloat() / losingTeamLeftToScore
+}
+
+// stub func to disable dropship intro
+bool function ClassicMP_NoIntro( entity player )
+{
+	return false
 }

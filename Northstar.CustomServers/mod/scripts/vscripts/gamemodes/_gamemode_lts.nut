@@ -30,13 +30,12 @@ void function GamemodeLts_Init()
 
 	TrackTitanDamageInPlayerGameStat( PGS_ASSAULT_SCORE )
 
-	ClassicMP_SetCustomIntro( ClassicMP_DefaultNoIntro_Setup, 0 )
-
 	GM_AddThirtySecondsLeftFunc( ThirtySecondsLeft )
 
 	AddCallback_OnClientConnected( SetupPlayerLTSChallenges ) // Just to make up the Match Goals tracking
 	AddCallback_OnClientDisconnected( RemovePlayerLTSChallenges ) // Safety removal of data to prevent crashes
 	AddCallback_OnPlayerKilled( LTSChallengeForPlayerKilled )
+	SetCustomIntroLength( 0.05 )
 }
 
 void function SetupPlayerLTSChallenges( entity player )

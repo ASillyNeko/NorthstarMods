@@ -123,6 +123,7 @@ void function GamemodeFD_Init()
 	SetRoundBased( true )
 	SetSwitchSidesBased( false ) // Just to make sure in case of any future problem regarding teamside switch
 	SetEpilogueEliminationBased( false ) // Makes its so players don't get eliminated and become observers during epilogue
+	SetCustomWinnerDeterminedLength( FD_DEFEAT_ANNOUNCEMENT_LENGTH )
 	FlagSet( "DisableTimeLimit" ) // Disable loss by timer because the wait feature will truly idle servers until people joins
 	GameModeAnnouncementOnlyPlaysOnceForPlayer( true )
 	Riff_ForceBoostAvailability( eBoostAvailability.Disabled )
@@ -137,14 +138,13 @@ void function GamemodeFD_Init()
 	AddCallback_GameStateEnter( eGameState.Prematch, FD_createHarvester )
 	AddCallback_GameStateEnter( eGameState.Playing, StartFDMatch )
 	AddCallback_GameStateEnter( eGameState.WinnerDetermined, FD_OnWinnerDetermined )
-	AddGMGetWinnerDeterminedWait( FD_WinnerDeterminedWait )
 	AddCallback_OnRoundEndCleanup( FD_WaveCleanup )
 	AddCallback_OnClientConnected( GamemodeFD_InitPlayer )
 	AddCallback_OnClientDisconnected( OnPlayerDisconnectedOrDestroyed )
 	AddCallback_OnPlayerGetsNewPilotLoadout( FD_OnPlayerGetsNewPilotLoadout )
 	AddCallback_OnPilotBecomesTitan( FD_PilotEmbark )
 	AddCallback_OnTitanBecomesPilot( FD_PilotDisembark )
-	ClassicMP_SetEpilogue( FD_SetupEpilogue )
+	SetCustomEvacFunc( FD_SetupEpilogue )
 	AddOnRodeoStartedCallback( FD_PilotStartRodeo )
 
 	// Damage Callbacks
@@ -200,7 +200,7 @@ void function GamemodeFD_Init()
 	AddSonarStartCallback( FD_OnSonarStart )
 	ScoreEvent_SetupScoreValuesForFrontierDefense()
 
-	difficultyLevel = FD_GetDifficultyLevel() // Refresh this only on map load, to avoid midgame commands messing up with difficulties (i.e setting mp_gamemode fd_hard midgame in a regular match through console on local host would immediately make Stalkers spawns with EPG)
+	difficultyLevel = GetDifficultyLevel() // Refresh this only on map load, to avoid midgame commands messing up with difficulties (i.e setting mp_gamemode fd_hard midgame in a regular match through console on local host would immediately make Stalkers spawns with EPG)
 	level.endOfRoundPlayerState = ENDROUND_FREE
 
 	for ( int i = 0; i < 20; i++ ) // Setup NPC array for Harvester Damage tracking
@@ -585,11 +585,6 @@ void function FD_OnWinnerDetermined()
 	if ( !RoundScoreLimit_Complete() )
 		foreach ( entity player in GetPlayerArray() )
 			thread Coop_DelayedWinnerDetermined( player )
-}
-
-float function FD_WinnerDeterminedWait()
-{
-	return FD_DEFEAT_ANNOUNCEMENT_LENGTH
 }
 
 void function Coop_DelayedWinnerDetermined( entity player )
