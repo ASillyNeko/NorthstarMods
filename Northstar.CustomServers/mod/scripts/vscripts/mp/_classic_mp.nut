@@ -791,7 +791,8 @@ void function SpawnPlayerIntoSlotInDropship( entity player, bool waveSpawn = fal
 
 		shipToSpawnIn = expect entity( expect array( expect table( level.classicMPDropships )[ team ] )[ index ] ) // 1st ship
 	}
-	else
+
+	if ( !IsValid( shipToSpawnIn ) )
 	{
 		// printt( "Second ship" )
 		int index = expect array( expect table( level.classicMPDropships )[ team ] ).len() - 1
