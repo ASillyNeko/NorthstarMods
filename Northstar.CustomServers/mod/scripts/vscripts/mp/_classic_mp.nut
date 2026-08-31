@@ -784,20 +784,20 @@ void function SpawnPlayerIntoSlotInDropship( entity player, bool waveSpawn = fal
 	entity shipToSpawnIn
 
 	// Assume we never have more than 8 players...
-	if ( numOfDropshipSpawningTeammates < SQUAD_SIZE )
+	if ( numOfDropshipSpawningTeammates < SQUAD_SIZE && expect array( expect table( level.classicMPDropships )[ team ] ).len() > 1 )
 	{
-		// printt( "Second ship" )
+		// printt( "First ship" )
 		int index = expect array( expect table( level.classicMPDropships )[ team ] ).len() - 2
 
-		shipToSpawnIn = expect entity( expect array( expect table( level.classicMPDropships )[ team ] )[ index ] ) // 2nd ship
+		shipToSpawnIn = expect entity( expect array( expect table( level.classicMPDropships )[ team ] )[ index ] ) // 1st ship
 	}
 
 	if ( !IsValid( shipToSpawnIn ) )
 	{
-		// printt( "First ship" )
+		// printt( "Second ship" )
 		int index = expect array( expect table( level.classicMPDropships )[ team ] ).len() - 1
 
-		shipToSpawnIn = expect entity( expect array( expect table( level.classicMPDropships )[ team ] )[ index ] ) // 1st ship
+		shipToSpawnIn = expect entity( expect array( expect table( level.classicMPDropships )[ team ] )[ index ] ) // 2nd ship
 	}
 
 	int seatNumber = numOfDropshipSpawningTeammates % 4
