@@ -208,6 +208,8 @@ array<entity> function GetDropshipStartSpawnsForTeam( int team )
 {
 	array<entity> teamDropshipSpawns = []
 
+	ArrayRemoveDead( file.dropship_start_spawns )
+
 	foreach ( entity spawnpoint in file.dropship_start_spawns )
 	{
 		if ( spawnpoint.GetTeam() != team )
