@@ -62,7 +62,6 @@ struct
 {
 	table<int, bool> dropshipDisabledTeams = {}
 	table<int, array<entity> > dropshipSpawnPlayerList = {}
-	table<int, array<entity> > classicMPDropships = {}
 	float dropshipSpawnTime = -1
 	bool functionref( entity ) classicMP_introPlayerSpawnFunc = null
 	bool functionref( array<entity> ) classicMP_prematchSpawnPlayersFunc = null
@@ -356,9 +355,8 @@ void function ClearDropshipSpawnPlayerList( int ornull team = null )
 
 void function ClearClassicDropships()
 {
-	file.classicMPDropships[ TEAM_IMC ].clear()
-
-	file.classicMPDropships[ TEAM_MILITIA ].clear()
+	level.classicMPDropships[ TEAM_IMC ].clear()
+	level.classicMPDropships[ TEAM_MILITIA ].clear()
 }
 
 void function ClassicMP_Dropship_PrematchCallback()
