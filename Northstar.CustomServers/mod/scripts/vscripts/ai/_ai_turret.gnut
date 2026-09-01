@@ -169,7 +169,7 @@ void function RevivableTurret_Kill( entity turret )
 		entity turretOwner = turret.GetBossPlayer()
 		if ( IsValidPlayer( turretOwner ) )
 			PlayFactionDialogueToPlayer( "fd_turretOffline", turretOwner )
-		#endif
+	#endif
 
 	turret.EnableNPCFlag( NPC_IGNORE_ALL )
 	MakeTurretInvulnerable( turret )
