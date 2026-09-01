@@ -479,7 +479,9 @@ void function SetWinner( int winningTeam, int winReason, string winReasonText, s
 	else
 		announceRoundWinnerLosingSubstr = GetStringID( svGlobal.lossReasonText )
 
-	foreach ( entity player in GetPlayerArray() )
+	array<entity> players = GetPlayerArray()
+
+	foreach ( entity player in players )
 	{
 		int announcementSubstr = announceRoundWinnerLosingSubstr
 
@@ -1065,7 +1067,9 @@ void function GameStateEnter_WinnerDetermined()
 
 	int winningTeam = GetWinningTeam()
 
-	AnnounceWinner( winningTeam )
+	#if FACTION_DIALOGUE_ENABLED
+		AnnounceWinner( winningTeam )
+	#endif
 
 	level.nv.gameEndTime = Time()
 
@@ -1216,7 +1220,9 @@ void function GameStateEnter_SwitchingSides()
 
 	MoveFrontline( TEAM_IMC )
 
-	thread DialogueAnnounceSwitchingSides()
+	#if FACTION_DIALOGUE_ENABLED
+		thread AnnounceSwitchingSides()
+	#endif
 }
 
 void function GameRulesThink_SwitchingSides()
@@ -1241,19 +1247,6 @@ void function GameRulesThink_SwitchingSides()
 		SetGameState( eGameState.PickLoadout )
 	else
 		SetGameState( eGameState.Prematch )
-}
-
-void function DialogueAnnounceSwitchingSides()
-{
-	#if FACTION_DIALOGUE_ENABLED
-		foreach ( entity player in GetPlayerArray() )
-			PlayFactionDialogueToPlayer( "mp_halftime", player )
-
-		wait ROUND_WINNING_KILL_REPLAY_DELAY_BETWEEN_ANNOUNCEMENTS
-
-		foreach ( entity player in GetPlayerArray() )
-			PlayFactionDialogueToPlayer( "mp_sideSwitching", player )
-	#endif
 }
 
 /*
@@ -1430,7 +1423,9 @@ void function ClearPlayers()
 {
 	svGlobal.levelEnt.Signal( "ClearPlayers" )
 
-	foreach ( entity player in GetPlayerArray() )
+	array<entity> players = GetPlayerArray()
+
+	foreach ( entity player in players )
 	{
 		// Depend on SwitchingSides etc to screenfade correctly
 		PROTO_CleanupTrackedProjectiles( player )
@@ -1500,9 +1495,10 @@ bool function IsRoundBasedGameOver()
 	}
 	else
 	{
+		array<entity> players = GetPlayerArray()
 		int team = TEAM_UNASSIGNED
 
-		foreach ( entity player in GetPlayerArray() )
+		foreach ( entity player in players )
 		{
 			if ( team != TEAM_UNASSIGNED )
 			{
@@ -1609,19 +1605,14 @@ int function CheckEliminationPilotWinner( bool setWinner = false )
 	if ( !GameRules_AllowMatchEnd() )
 		return TEAM_UNASSIGNED
 
-	array<entity> players = GetPlayerArray()
+	array<entity> players = GetPlayerArray_Alive()
 	table<int, int> teams
 
 	foreach ( entity player in players )
 		teams[ player.GetTeam() ] <- 0
 
 	foreach ( entity player in players )
-	{
-		if ( !IsAlive( player ) )
-			continue
-
 		teams[ player.GetTeam() ]++
-	}
 
 	int teamsWithPlayers = 0
 	int lastTeamWithPlayers = -1
@@ -1743,9 +1734,6 @@ int function CheckEliminationTitanWinner( bool setWinner = false )
 	{
 		foreach ( entity player in players )
 		{
-			if ( !IsValidPlayer( player ) )
-				continue
-
 			entity petTitan = player.GetPetTitan()
 			int team = player.GetTeam()
 
@@ -1756,7 +1744,7 @@ int function CheckEliminationTitanWinner( bool setWinner = false )
 			{
 				teamTitans[ team ].append( petTitan )
 			}
-			else if ( ( IsAlive( player ) && player.IsTitan() ) )
+			else if ( IsAlive( player ) && player.IsTitan() )
 			{
 				teamTitans[ team ].append( player )
 				teamPlayerTitans[ team ]++
@@ -1769,9 +1757,6 @@ int function CheckEliminationTitanWinner( bool setWinner = false )
 	{
 		foreach ( entity player in players )
 		{
-			if ( !IsValidPlayer( player ) )
-				continue
-
 			entity petTitan = player.GetPetTitan()
 			int team = player.GetTeam()
 
@@ -2041,7 +2026,9 @@ bool function TimeLimit_Complete()
 				foreach ( int team in [ TEAM_IMC, TEAM_MILITIA ] )
 					CreateTeamMusicEvent( team, eMusicPieceID.LEVEL_LAST_MINUTE, Time() )
 
-				foreach ( entity player in GetPlayerArray() )
+				array<entity> players = GetPlayerArray()
+
+				foreach ( entity player in players )
 					PlayCurrentTeamMusicEventsOnPlayer( player )
 			}
 		}
@@ -2064,7 +2051,9 @@ bool function TimeLimit_Complete()
 				foreach ( int team in [ TEAM_IMC, TEAM_MILITIA ] )
 					CreateTeamMusicEvent( team, file.threeMinuteMusicID, Time() )
 
-				foreach ( entity player in GetPlayerArray() )
+				array<entity> players = GetPlayerArray()
+
+				foreach ( entity player in players )
 					PlayCurrentTeamMusicEventsOnPlayer( player )
 			}
 		}
@@ -2079,7 +2068,9 @@ bool function TimeLimit_Complete()
 
 			StopPlayingMinuteMusicToAll()
 
-			foreach ( entity player in GetPlayerArray() )
+			array<entity> players = GetPlayerArray()
+
+			foreach ( entity player in players )
 				PlayCurrentTeamMusicEventsOnPlayer( player )
 		}
 	}
@@ -2226,7 +2217,9 @@ void function RoundWinningKillReplay() // Only Tested in MFD Pro for now! SHould
 	OnThreadEnd(
 		function() : ()
 		{
-			foreach ( entity player in GetPlayerArray() )
+			array<entity> players = GetPlayerArray()
+
+			foreach ( entity player in players )
 			{
 				ClearPlayerFromReplay( player )
 				ScreenFade( player, 0, 0, 1, 255, 1.5, 1.5, FFADE_STAYOUT | FFADE_PURGE | FFADE_NOT_IN_REPLAY )
@@ -2242,7 +2235,9 @@ void function RoundWinningKillReplay() // Only Tested in MFD Pro for now! SHould
 	level.nv.roundWinningKillReplayEntHealthFrac = file.roundWinningKillReplayHealthFrac
 	level.nv.replayDisabled = true
 
-	foreach ( entity player in GetPlayerArray() )
+	array<entity> players = GetPlayerArray()
+
+	foreach ( entity player in players )
 	{
 		ClearPlayerFromReplay( player )
 		ScreenFade( player, 0, 0, 2, 255, ROUND_WINNING_KILL_REPLAY_SCREEN_FADE_TIME - 1.5, 0.0, FFADE_OUT | FFADE_STAYOUT ) // Don't use the util ScreenFadeToBlack function because we don't want to purge the existing black screen fades that might be called from elsewhere
@@ -2250,7 +2245,9 @@ void function RoundWinningKillReplay() // Only Tested in MFD Pro for now! SHould
 
 	wait ROUND_WINNING_KILL_REPLAY_STARTUP_WAIT // Delay before we start kill replay proper
 
-	foreach ( entity player in GetPlayerArray() )
+	players = GetPlayerArray()
+
+	foreach ( entity player in players )
 	{
 		// Bad things happen if we try to do a kill replay that lasts longer than the player entity existing on the server
 		if ( Time() - player.p.connectTime <= ROUND_WINNING_KILL_REPLAY_LENGTH_OF_REPLAY )
@@ -2273,7 +2270,9 @@ void function RoundWinningKillReplay() // Only Tested in MFD Pro for now! SHould
 
 	wait ROUND_WINNING_KILL_REPLAY_LENGTH_OF_REPLAY
 
-	foreach ( entity player in GetPlayerArray() )
+	players = GetPlayerArray()
+
+	foreach ( entity player in players )
 		ScreenFadeToBlackForever( player, 1.0 )
 
 	wait 2.0
@@ -2312,7 +2311,10 @@ void function UpdateMatchProgress()
 	{
 		level.nv.matchProgress = progressInt
 		// printt( "Match Progress: " + progressInt + "%" )
-		Announce_Progress( progress )
+
+		#if FACTION_DIALOGUE_ENABLED
+			Announce_Progress( progress )
+		#endif
 	}
 }
 
@@ -2522,6 +2524,17 @@ void function AnnounceWinner( int winningTeam )
 		PlayFactionDialogueToTeam( GetGameWonAnnouncement(), winningTeam )
 		PlayFactionDialogueToTeam( GetGameLostAnnouncement(), losingTeam )
 	}
+}
+
+void function AnnounceSwitchingSides()
+{
+	PlayFactionDialogueToTeam( "mp_halftime", TEAM_IMC, true )
+	PlayFactionDialogueToTeam( "mp_halftime", TEAM_MILITIA, true )
+
+	wait ROUND_WINNING_KILL_REPLAY_DELAY_BETWEEN_ANNOUNCEMENTS
+
+	PlayFactionDialogueToTeam( "mp_sideSwitching", TEAM_IMC, true )
+	PlayFactionDialogueToTeam( "mp_sideSwitching", TEAM_MILITIA, true )
 }
 
 void function ClearWeapons()

@@ -14,9 +14,6 @@ struct
 
 void function GamemodeLts_Init()
 {
-	// signals
-	RegisterSignal( "ClearThirtySecondWallhackHighlight" )
-
 	// gamemode settings
 	SetRoundBased( true )
 	SetSwitchSidesBased( true )
@@ -79,8 +76,11 @@ void function ThirtySecondsLeft()
 		// warn there's 30 seconds left
 		Remote_CallFunction_NonReplay( player, "ServerCallback_LTSThirtySecondWarning" )
 
-		// do inital highlight
+		// do highlight
 		RefreshThirtySecondWallhackHighlight( player, player.GetPetTitan() )
+
+		// clear highlight
+		thread ClearThirtySecondWallhackHighlight()
 	}
 }
 
@@ -90,31 +90,32 @@ void function RefreshThirtySecondWallhackHighlight( entity player, entity titan 
 		return
 
 	if ( !Hightlight_HasEnemyHighlight( player, "enemy_sonar" ) )
-	{
 		Highlight_SetEnemyHighlight( player, "enemy_sonar" )
-		thread ClearThirtySecondWallhackHighlight( player )
-	}
 
 	if ( IsAlive( titan ) && !Hightlight_HasEnemyHighlight( titan, "enemy_sonar" ) )
-	{
 		Highlight_SetEnemyHighlight( titan, "enemy_sonar" )
-		thread ClearThirtySecondWallhackHighlight( titan )
-	}
 }
 
-void function ClearThirtySecondWallhackHighlight( entity ent )
+void function ClearThirtySecondWallhackHighlight()
 {
-	ent.EndSignal( "OnDestroy" )
-	ent.EndSignal( "OnDeath" )
+	svGlobal.levelEnt.EndSignal( "GameEnd" )
 
-	ent.Signal( "ClearThirtySecondWallhackHighlight" )
-	ent.EndSignal( "ClearThirtySecondWallhackHighlight" )
+	OnThreadEnd(
+		void function() : ()
+		{
+			array<entity> players = GetPlayerArray_Alive()
 
-	while ( GamePlaying() && GameTime_TimeLeftSeconds() >= 25 && GameTime_TimeLeftSeconds() <= 30 )
-		WaitFrame()
+			foreach ( entity player in players )
+			{
+				UpdatePlayerHighlightsSettings( player )
 
-	if ( ent.IsPlayer() )
-		UpdatePlayerHighlightsSettings( ent )
-	else
-		Highlight_ClearEnemyHighlight( ent )
+				entity titan = player.GetPetTitan()
+
+				if ( IsAlive( titan ) )
+					Highlight_ClearEnemyHighlight( titan )
+			}
+		}
+	)
+
+	wait 5
 }

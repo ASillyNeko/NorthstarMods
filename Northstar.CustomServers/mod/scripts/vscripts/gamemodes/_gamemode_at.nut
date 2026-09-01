@@ -743,17 +743,19 @@ void function AT_GameLoop_Threaded()
 		waveId = int( min( waveId, GetWaveDataSize() - waveCapAmount ) )
 
 		// New wave dialogue
-		bool waveChanged = lastWaveId != waveId
-		if ( waveChanged )
-		{
-			PlayFactionDialogueToTeam( "bh_newWave", TEAM_IMC )
-			PlayFactionDialogueToTeam( "bh_newWave", TEAM_MILITIA )
-		}
-		else // same wave, second half
-		{
-			PlayFactionDialogueToTeam( "bh_incoming", TEAM_IMC )
-			PlayFactionDialogueToTeam( "bh_incoming", TEAM_MILITIA )
-		}
+		#if FACTION_DIALOGUE_ENABLED
+			bool waveChanged = lastWaveId != waveId
+			if ( waveChanged )
+			{
+				PlayFactionDialogueToTeam( "bh_newWave", TEAM_IMC )
+				PlayFactionDialogueToTeam( "bh_newWave", TEAM_MILITIA )
+			}
+			else // same wave, second half
+			{
+				PlayFactionDialogueToTeam( "bh_incoming", TEAM_IMC )
+				PlayFactionDialogueToTeam( "bh_incoming", TEAM_MILITIA )
+			}
+		#endif
 
 		lastWaveId = waveId
 
@@ -762,7 +764,9 @@ void function AT_GameLoop_Threaded()
 		bool isBossWave = waveCount % 2 == 0 // even number waveCount means boss wave
 
 		// announce the wave
-		foreach ( entity player in GetPlayerArray() )
+		array<entity> players = GetPlayerArray()
+
+		foreach ( entity player in players )
 		{
 			if ( isBossWave )
 			{
@@ -1045,8 +1049,10 @@ void function CampProgressThink( int spawnId, int totalNPCsToSpawn )
 
 		if ( campLeft <= 0.0 ) // camp wiped!
 		{
-			PlayFactionDialogueToTeam( "bh_cleared" + campLetter, TEAM_IMC )
-			PlayFactionDialogueToTeam( "bh_cleared" + campLetter, TEAM_MILITIA )
+			#if FACTION_DIALOGUE_ENABLED
+				PlayFactionDialogueToTeam( "bh_cleared" + campLetter, TEAM_IMC )
+				PlayFactionDialogueToTeam( "bh_cleared" + campLetter, TEAM_MILITIA )
+			#endif
 
 			entity campEnt = GetGlobalNetEnt( campEntVarName )
 			if ( IsValid( campEnt ) )
@@ -1781,10 +1787,12 @@ void function OnBountyTitanKilled( entity titan, var damageInfo )
 	}
 
 	// faction dialogue
-	int team = attacker.GetTeam()
-	PlayFactionDialogueToPlayer( "bh_playerKilledBounty", attacker )
-	PlayFactionDialogueToTeamExceptPlayer( "bh_bountyClaimedByFriendly", team, attacker )
-	PlayFactionDialogueToTeam( "bh_bountyClaimedByEnemy", GetOtherTeam( team ) )
+	#if FACTION_DIALOGUE_ENABLED
+		int team = attacker.GetTeam()
+		PlayFactionDialogueToPlayer( "bh_playerKilledBounty", attacker )
+		PlayFactionDialogueToTeamExceptPlayer( "bh_bountyClaimedByFriendly", team, attacker )
+		PlayFactionDialogueToTeam( "bh_bountyClaimedByEnemy", GetOtherTeam( team ) )
+	#endif
 }
 
 entity function GetBountyBossDamageOwner( entity attacker, entity titan )

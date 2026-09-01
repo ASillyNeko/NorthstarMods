@@ -412,13 +412,19 @@ bool function TryFWTerritoryDialogue( entity territory, entity player )
 		// consider this means all enemies has left friendly territory, should use a debounce
 		if ( enemiesInside.len() == 0 && !isInDebounce )
 		{
-			PlayFactionDialogueToTeam( "fortwar_terEnemyExpelled", terrTeam )
+			#if FACTION_DIALOGUE_ENABLED
+				PlayFactionDialogueToTeam( "fortwar_terEnemyExpelled", terrTeam )
+			#endif
+
 			return true
 		}
 		// has more than 3 titans inside including new one, ignores debounce
 		else if ( enemyTitansInside.len() >= 3 && thisTimeIsTitan )
 		{
-			PlayFactionDialogueToTeam( "fortwar_terPresentEnemyTitans", terrTeam )
+			#if FACTION_DIALOGUE_ENABLED
+				PlayFactionDialogueToTeam( "fortwar_terPresentEnemyTitans", terrTeam )
+			#endif
+
 			return true
 		}
 		// only the player inside terrytory
@@ -427,13 +433,19 @@ bool function TryFWTerritoryDialogue( entity territory, entity player )
 			// entered territory as titan, ignores debounce
 			if ( thisTimeIsTitan )
 			{
-				PlayFactionDialogueToTeam( "fortwar_terEnteredEnemyPilot", terrTeam )
+				#if FACTION_DIALOGUE_ENABLED
+					PlayFactionDialogueToTeam( "fortwar_terEnteredEnemyPilot", terrTeam )
+				#endif
+
 				return true
 			}
 			// entered territory as pilot
 			else if ( !isInDebounce )
 			{
-				PlayFactionDialogueToTeam( "fortwar_terEnteredEnemyPilot", terrTeam )
+				#if FACTION_DIALOGUE_ENABLED
+					PlayFactionDialogueToTeam( "fortwar_terEnteredEnemyPilot", terrTeam )
+				#endif
+
 				return true
 			}
 		}
@@ -442,7 +454,10 @@ bool function TryFWTerritoryDialogue( entity territory, entity player )
 		// consider this means all friendlies has left enemy territory
 		if ( friendliesInside.len() == 0 && !sameTeam && !isInDebounce )
 		{
-			PlayFactionDialogueToTeam( "fortwar_terFriendlyExpelled", terrTeam )
+			#if FACTION_DIALOGUE_ENABLED
+				PlayFactionDialogueToTeam( "fortwar_terFriendlyExpelled", terrTeam )
+			#endif
+
 			return true
 		}
 	}
@@ -1429,12 +1444,14 @@ void function OnMegaTurretDamaged( entity turret, var damageInfo )
 		DamageInfo_SetDamage( damageInfo, DamageInfo_GetDamage( damageInfo ) / 2 ) // nerf scorch
 
 	// faction dialogue
-	damageAmount = DamageInfo_GetDamage( damageInfo )
-	if ( turret.GetHealth() - damageAmount <= 0 ) // turret killed this shot
-	{
-		if ( GamePlayingOrSuddenDeath() )
-			PlayFactionDialogueToTeam( "fortwar_turretDestroyedFriendly", turretTeam )
-	}
+	#if FACTION_DIALOGUE_ENABLED
+		damageAmount = DamageInfo_GetDamage( damageInfo )
+		if ( turret.GetHealth() - damageAmount <= 0 ) // turret killed this shot
+		{
+			if ( GamePlayingOrSuddenDeath() )
+				PlayFactionDialogueToTeam( "fortwar_turretDestroyedFriendly", turretTeam )
+		}
+	#endif
 }
 
 void function InitTurretSettings()
@@ -1564,8 +1581,10 @@ void function TurretStateWatcher( TurretSiteStruct turretSite )
 		}
 
 		// wrong dialogue, it will say "The turret you requested is on the way"
-		// if( changedTeamThisFrame ) // has been hacked!
+		// #if FACTION_DIALOGUE_ENABLED
+		// if ( changedTeamThisFrame ) // has been hacked!
 		//    PlayFactionDialogueToTeam( "fortwar_turretDeployFriendly", turretTeam )
+		// #endif
 
 		int iconTeam = turretTeam == TEAM_BOTH
 			? TEAM_UNASSIGNED
@@ -1591,10 +1610,12 @@ void function TurretStateWatcher( TurretSiteStruct turretSite )
 					stateFlag = TURRET_UNDERATTACK_IMC_FLAG
 
 				// these dialogue have 30s debounce inside
-				if ( isBaseTurret )
-					PlayFactionDialogueToTeam( "fortwar_baseTurretsUnderAttack", TEAM_IMC )
-				else
-					PlayFactionDialogueToTeam( "fortwar_awayTurretsUnderAttack", TEAM_IMC )
+				#if FACTION_DIALOGUE_ENABLED
+					if ( isBaseTurret )
+						PlayFactionDialogueToTeam( "fortwar_baseTurretsUnderAttack", TEAM_IMC )
+					else
+						PlayFactionDialogueToTeam( "fortwar_awayTurretsUnderAttack", TEAM_IMC )
+				#endif
 			}
 			else if ( turret.GetShieldHealth() > 0 ) // has shields left
 				stateFlag = TURRET_SHIELDED_IMC_FLAG
@@ -1613,10 +1634,12 @@ void function TurretStateWatcher( TurretSiteStruct turretSite )
 					stateFlag = TURRET_UNDERATTACK_MLT_FLAG
 
 				// these dialogue have 30s debounce inside
-				if ( isBaseTurret )
-					PlayFactionDialogueToTeam( "fortwar_baseTurretsUnderAttack", TEAM_MILITIA )
-				else
-					PlayFactionDialogueToTeam( "fortwar_awayTurretsUnderAttack", TEAM_MILITIA )
+				#if FACTION_DIALOGUE_ENABLED
+					if ( isBaseTurret )
+						PlayFactionDialogueToTeam( "fortwar_baseTurretsUnderAttack", TEAM_MILITIA )
+					else
+						PlayFactionDialogueToTeam( "fortwar_awayTurretsUnderAttack", TEAM_MILITIA )
+				#endif
 			}
 			else if ( turret.GetShieldHealth() > 0 ) // has shields left
 				stateFlag = TURRET_SHIELDED_MLT_FLAG
@@ -1824,8 +1847,11 @@ void function OnHarvesterDamaged( entity harvester, var damageInfo )
 	{
 		if ( !harvesterstruct.harvesterShieldDown )
 		{
-			PlayFactionDialogueToTeam( "fortwar_baseShieldDownFriendly", friendlyTeam )
-			PlayFactionDialogueToTeam( "fortwar_baseShieldDownEnemy", enemyTeam )
+			#if FACTION_DIALOGUE_ENABLED
+				PlayFactionDialogueToTeam( "fortwar_baseShieldDownFriendly", friendlyTeam )
+				PlayFactionDialogueToTeam( "fortwar_baseShieldDownEnemy", enemyTeam )
+			#endif
+
 			harvesterstruct.harvesterShieldDown = true // prevent shield dialogues from repeating
 		}
 	}
@@ -1884,8 +1910,11 @@ void function OnHarvesterPostDamaged( entity harvester, var damageInfo )
 
 	if ( !harvesterstruct.harvesterShieldDown )
 	{
-		PlayFactionDialogueToTeam( "fortwar_baseShieldDownFriendly", friendlyTeam )
-		PlayFactionDialogueToTeam( "fortwar_baseShieldDownEnemy", enemyTeam )
+		#if FACTION_DIALOGUE_ENABLED
+			PlayFactionDialogueToTeam( "fortwar_baseShieldDownFriendly", friendlyTeam )
+			PlayFactionDialogueToTeam( "fortwar_baseShieldDownEnemy", enemyTeam )
+		#endif
+
 		harvesterstruct.harvesterShieldDown = true // prevent shield dialogues from repeating
 	}
 
@@ -1894,23 +1923,25 @@ void function OnHarvesterPostDamaged( entity harvester, var damageInfo )
 	float oldhealthpercent = ( ( harvester.GetHealth().tofloat() / harvester.GetMaxHealth() ) * 100 )
 	float healthpercent = ( ( newHealth / harvester.GetMaxHealth() ) * 100 )
 
-	if ( healthpercent <= 75 && oldhealthpercent > 75 ) // we don't want the dialogue to keep saying "Harvester is below 75% health" everytime they take additional damage
-	{
-		PlayFactionDialogueToTeam( "fortwar_baseDmgFriendly75", friendlyTeam )
-		PlayFactionDialogueToTeam( "fortwar_baseDmgEnemy75", enemyTeam )
-	}
+	#if FACTION_DIALOGUE_ENABLED
+		if ( healthpercent <= 75 && oldhealthpercent > 75 ) // we don't want the dialogue to keep saying "Harvester is below 75% health" everytime they take additional damage
+		{
+			PlayFactionDialogueToTeam( "fortwar_baseDmgFriendly75", friendlyTeam )
+			PlayFactionDialogueToTeam( "fortwar_baseDmgEnemy75", enemyTeam )
+		}
 
-	if ( healthpercent <= 50 && oldhealthpercent > 50 )
-	{
-		PlayFactionDialogueToTeam( "fortwar_baseDmgFriendly50", friendlyTeam )
-		PlayFactionDialogueToTeam( "fortwar_baseDmgEnemy50", enemyTeam )
-	}
+		if ( healthpercent <= 50 && oldhealthpercent > 50 )
+		{
+			PlayFactionDialogueToTeam( "fortwar_baseDmgFriendly50", friendlyTeam )
+			PlayFactionDialogueToTeam( "fortwar_baseDmgEnemy50", enemyTeam )
+		}
 
-	if ( healthpercent <= 25 && oldhealthpercent > 25 )
-	{
-		PlayFactionDialogueToTeam( "fortwar_baseDmgFriendly25", friendlyTeam )
-		PlayFactionDialogueToTeam( "fortwar_baseDmgEnemy25", enemyTeam )
-	}
+		if ( healthpercent <= 25 && oldhealthpercent > 25 )
+		{
+			PlayFactionDialogueToTeam( "fortwar_baseDmgFriendly25", friendlyTeam )
+			PlayFactionDialogueToTeam( "fortwar_baseDmgEnemy25", enemyTeam )
+		}
+	#endif
 
 	if ( newHealth <= 0 )
 	{
@@ -1926,8 +1957,10 @@ void function OnHarvesterPostDamaged( entity harvester, var damageInfo )
 	if ( attacker.IsPlayer() )
 	{
 		// dialogue for enemy attackers
-		if ( !harvesterstruct.harvesterShieldDown )
-			PlayFactionDialogueToTeam( "fortwar_baseEnemyAllyAttacking", enemyTeam )
+		#if FACTION_DIALOGUE_ENABLED
+			if ( !harvesterstruct.harvesterShieldDown )
+				PlayFactionDialogueToTeam( "fortwar_baseEnemyAllyAttacking", enemyTeam )
+		#endif
 
 		attacker.NotifyDidDamage(
 			harvester,
@@ -1964,8 +1997,6 @@ void function OnHarvesterPostDamaged( entity harvester, var damageInfo )
 	{
 		// force deciding winner
 		SetWinner( enemyTeam, eWinReason.DEFAULT, "", "" )
-		// PlayFactionDialogueToTeam( "scoring_wonMercy", enemyTeam )
-		// PlayFactionDialogueToTeam( "fortwar_matchLoss", friendlyTeam )
 		GameRules_SetTeamScore2( friendlyTeam, 0 ) // force set score2 to 0( shield bar will empty )
 		GameRules_SetTeamScore( friendlyTeam, 0 ) // force set score to 0( health 0% )
 	}
@@ -2036,7 +2067,11 @@ void function HarvesterThink( HarvesterStruct fw_harvester )
 				StopSoundOnEntity( harvester, "coop_generator_shieldrecharge_resume" )
 				harvester.SetShieldHealth( harvester.GetShieldHealthMax() )
 				EmitSoundOnEntity( harvester, "coop_generator_shieldrecharge_end" )
-				PlayFactionDialogueToTeam( "fortwar_baseShieldUpFriendly", harvester.GetTeam() )
+
+				#if FACTION_DIALOGUE_ENABLED
+					PlayFactionDialogueToTeam( "fortwar_baseShieldUpFriendly", harvester.GetTeam() )
+				#endif
+
 				isRegening = false
 			}
 			else
@@ -2095,8 +2130,6 @@ void function UpdateHarvesterHealth( int team )
 		{
 			int winnerTeam = GetOtherTeam( team )
 			SetWinner( winnerTeam, eWinReason.DEFAULT, "", "" )
-			// PlayFactionDialogueToTeam( "scoring_wonMercy", winnerTeam )
-			// PlayFactionDialogueToTeam( "fortwar_matchLoss", team )
 			GameRules_SetTeamScore2( team, 0 ) // force set score2 to 0( shield bar will empty )
 			GameRules_SetTeamScore( team, 0 ) // force set score to 0( health 0% )
 			break
@@ -2308,7 +2341,9 @@ function FW_UseBattery( batteryPortvar, playervar ) // actually void function( e
 		foreach ( entity friendly in GetPlayerArrayOfTeam( playerTeam ) )
 			AddPlayerScore( friendly, "FortWarTeamTurretControlBonus_" + teamTurretCount, friendly )
 
-		PlayFactionDialogueToTeam( "fortwar_turretShieldedByFriendlyPilot", playerTeam )
+		#if FACTION_DIALOGUE_ENABLED
+			PlayFactionDialogueToTeam( "fortwar_turretShieldedByFriendlyPilot", playerTeam )
+		#endif
 	}
 }
 

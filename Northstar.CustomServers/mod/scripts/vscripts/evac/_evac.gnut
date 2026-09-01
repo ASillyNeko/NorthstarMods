@@ -347,8 +347,10 @@ void function Evac( int evacTeam, float initialWait, float arrivalTime, float wa
 	SetTeamActiveObjective( GetOtherTeam( evacTeam ), "EG_StopExtract2", Time() + waitTime, file.evacIcon )
 
 	// dialogue
-	PlayFactionDialogueToTeam( "mp_evacGo", evacTeam )
-	PlayFactionDialogueToTeam( "mp_evacStop", GetOtherTeam( evacTeam ) )
+	#if FACTION_DIALOGUE_ENABLED
+		PlayFactionDialogueToTeam( "mp_evacGo", evacTeam )
+		PlayFactionDialogueToTeam( "mp_evacStop", GetOtherTeam( evacTeam ) )
+	#endif
 
 	// stop evac beam
 	if ( IsValid( effectFriendly ) )

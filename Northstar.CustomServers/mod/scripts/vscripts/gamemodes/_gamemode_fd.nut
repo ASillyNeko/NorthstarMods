@@ -608,7 +608,11 @@ void function mainGameLoop()
 		if ( currentWave == 0 && !Riff_MinimapState() )
 		{
 			wait 14
-			PlayFactionDialogueToTeam( "fd_minimapTip", TEAM_MILITIA )
+
+			#if FACTION_DIALOGUE_ENABLED
+				PlayFactionDialogueToTeam( "fd_minimapTip", TEAM_MILITIA )
+			#endif
+
 			wait 14
 		}
 		else // Still wait 14 seconds to let them to speak about the Harvester being up and running on first wave
@@ -665,36 +669,39 @@ void function executeWave()
 	// Do a secondary wait for alive enemies after all events executed
 	while ( !file.devForceAdvanceToNextWave && IsHarvesterAlive( fd_harvester.harvester ) && GetGlobalNetInt( "FD_AICount_Current" ) > 0 )
 	{
-		if ( enemyCount != GetGlobalNetInt( "FD_AICount_Current" ) )
-		{
-			enemyCount = GetGlobalNetInt( "FD_AICount_Current" )
-			switch ( enemyCount )
+		#if FACTION_DIALOGUE_ENABLED
+			if ( enemyCount != GetGlobalNetInt( "FD_AICount_Current" ) )
 			{
-				case 10:
-					PlayFactionDialogueToTeam( "fd_waveCleanup", TEAM_MILITIA )
-					break
+				enemyCount = GetGlobalNetInt( "FD_AICount_Current" )
 
-				case 5:
-					PlayFactionDialogueToTeam( "fd_waveCleanup5", TEAM_MILITIA )
-					break
+				switch ( enemyCount )
+				{
+					case 10:
+						PlayFactionDialogueToTeam( "fd_waveCleanup", TEAM_MILITIA )
+						break
 
-				case 4:
-					PlayFactionDialogueToTeam( "fd_waveCleanup4", TEAM_MILITIA )
-					break
+					case 5:
+						PlayFactionDialogueToTeam( "fd_waveCleanup5", TEAM_MILITIA )
+						break
 
-				case 3:
-					PlayFactionDialogueToTeam( "fd_waveCleanup3", TEAM_MILITIA )
-					break
+					case 4:
+						PlayFactionDialogueToTeam( "fd_waveCleanup4", TEAM_MILITIA )
+						break
 
-				case 2:
-					PlayFactionDialogueToTeam( "fd_waveCleanup2", TEAM_MILITIA )
-					break
+					case 3:
+						PlayFactionDialogueToTeam( "fd_waveCleanup3", TEAM_MILITIA )
+						break
 
-				case 1:
-					PlayFactionDialogueToTeam( "fd_waveCleanup1", TEAM_MILITIA )
-					break
+					case 2:
+						PlayFactionDialogueToTeam( "fd_waveCleanup2", TEAM_MILITIA )
+						break
+
+					case 1:
+						PlayFactionDialogueToTeam( "fd_waveCleanup1", TEAM_MILITIA )
+						break
+				}
 			}
-		}
+		#endif
 
 		WaitFrame()
 	}
@@ -814,7 +821,10 @@ bool function runWave( int waveIndex, bool shouldDoBuyTime )
 
 	if ( waveIndex < file.waveAnnouncement.len() && file.waveAnnouncement[ waveIndex ] != "" && !file.waveRestart )
 	{
-		PlayFactionDialogueToTeam( file.waveAnnouncement[ waveIndex ], TEAM_MILITIA )
+		#if FACTION_DIALOGUE_ENABLED
+			PlayFactionDialogueToTeam( file.waveAnnouncement[ waveIndex ], TEAM_MILITIA )
+		#endif
+
 		if ( waveIndex == 0 )
 			wait 8
 	}
@@ -894,12 +904,16 @@ bool function runWave( int waveIndex, bool shouldDoBuyTime )
 				)
 		}()
 
-		PlayFactionDialogueToTeam( "fd_firstWaveStartPrefix", TEAM_MILITIA )
+		#if FACTION_DIALOGUE_ENABLED
+			PlayFactionDialogueToTeam( "fd_firstWaveStartPrefix", TEAM_MILITIA )
+		#endif
 	}
-	else if ( isFinalWave() )
-		PlayFactionDialogueToTeam( "fd_finalWaveStartPrefix", TEAM_MILITIA )
-	else
-		PlayFactionDialogueToTeam( "fd_newWaveStartPrefix", TEAM_MILITIA )
+	#if FACTION_DIALOGUE_ENABLED
+		else if ( isFinalWave() )
+			PlayFactionDialogueToTeam( "fd_finalWaveStartPrefix", TEAM_MILITIA )
+		else
+			PlayFactionDialogueToTeam( "fd_newWaveStartPrefix", TEAM_MILITIA )
+	#endif
 
 	MessageToTeam( TEAM_MILITIA, eEventNotifications.FD_AnnounceWaveStart )
 
@@ -955,7 +969,11 @@ bool function runWave( int waveIndex, bool shouldDoBuyTime )
 		if ( FD_PlayersHaveRestartsLeft() )
 		{
 			SetWinner( TEAM_IMC, eWinReason.DEFAULT, "", "" )
-			PlayFactionDialogueToTeam( "fd_baseDeath", TEAM_MILITIA, true )
+
+			#if FACTION_DIALOGUE_ENABLED
+				PlayFactionDialogueToTeam( "fd_baseDeath", TEAM_MILITIA, true )
+			#endif
+
 			foreach ( entity player in GetPlayerArrayOfTeam( TEAM_MILITIA ) )
 			{
 				Remote_CallFunction_NonReplay(
@@ -1037,7 +1055,9 @@ bool function runWave( int waveIndex, bool shouldDoBuyTime )
 		}
 	}
 
-	WaveBreak_AnnounceHarvesterDamaged()
+	#if FACTION_DIALOGUE_ENABLED
+		WaveBreak_AnnounceHarvesterDamaged()
+	#endif
 
 	wait 5
 
@@ -1097,7 +1117,10 @@ void function FD_Win()
 
 	SetRoundBased( false )
 	SetWinner( TEAM_MILITIA, eWinReason.DEFAULT, "#FD_TOTAL_VICTORY_HINT", "#FD_TOTAL_VICTORY_HINT" )
-	PlayFactionDialogueToTeam( "fd_matchVictory", TEAM_MILITIA, true )
+
+	#if FACTION_DIALOGUE_ENABLED
+		PlayFactionDialogueToTeam( "fd_matchVictory", TEAM_MILITIA, true )
+	#endif
 
 	wait 2
 
@@ -1211,8 +1234,10 @@ void function FD_GiveTitan( bool waveRestart )
 		}
 	}
 
-	if ( !waveRestart )
-		PlayFactionDialogueToTeam( "fd_titanReadyNag", TEAM_MILITIA )
+	#if FACTION_DIALOGUE_ENABLED
+		if ( !waveRestart )
+			PlayFactionDialogueToTeam( "fd_titanReadyNag", TEAM_MILITIA )
+	#endif
 }
 
 void function WaveBreak_ShowPlayerBonus()
@@ -2100,47 +2125,49 @@ void function OnHarvesterDamaged( entity harvester, var damageInfo )
 			break
 	}
 
-	float shieldPercent = ( ( harvester.GetShieldHealth().tofloat() / harvester.GetShieldHealthMax() ) * 100 )
-	if ( shieldPercent < 100 && !file.harvesterShieldDown )
-	{
-		switch ( attackerTypeID )
+	#if FACTION_DIALOGUE_ENABLED
+		float shieldPercent = ( ( harvester.GetShieldHealth().tofloat() / harvester.GetShieldHealthMax() ) * 100 )
+		if ( shieldPercent < 100 && !file.harvesterShieldDown )
 		{
-			case eFD_AITypeIDs.TITAN_ARC:
-				PlayFactionDialogueToTeam( "fd_nagTitanArcAtBase", TEAM_MILITIA )
-				break
+			switch ( attackerTypeID )
+			{
+				case eFD_AITypeIDs.TITAN_ARC:
+					PlayFactionDialogueToTeam( "fd_nagTitanArcAtBase", TEAM_MILITIA )
+					break
 
-			case eFD_AITypeIDs.STALKER:
-				PlayFactionDialogueToTeam( "fd_nagKillStalkers", TEAM_MILITIA )
-				break
+				case eFD_AITypeIDs.STALKER:
+					PlayFactionDialogueToTeam( "fd_nagKillStalkers", TEAM_MILITIA )
+					break
 
-			case eFD_AITypeIDs.GRUNT:
-			case eFD_AITypeIDs.SPECTRE:
-				PlayFactionDialogueToTeam( "fd_nagKillInfantry", TEAM_MILITIA )
-				break
+				case eFD_AITypeIDs.GRUNT:
+				case eFD_AITypeIDs.SPECTRE:
+					PlayFactionDialogueToTeam( "fd_nagKillInfantry", TEAM_MILITIA )
+					break
 
-			case eFD_AITypeIDs.TITAN_MORTAR:
-				PlayFactionDialogueToTeam( "fd_nagKillTitansMortar", TEAM_MILITIA )
-				break
+				case eFD_AITypeIDs.TITAN_MORTAR:
+					PlayFactionDialogueToTeam( "fd_nagKillTitansMortar", TEAM_MILITIA )
+					break
 
-			case eFD_AITypeIDs.SPECTRE_MORTAR:
-				PlayFactionDialogueToTeam( "fd_nagKillMortarSpectres", TEAM_MILITIA )
-				break
+				case eFD_AITypeIDs.SPECTRE_MORTAR:
+					PlayFactionDialogueToTeam( "fd_nagKillMortarSpectres", TEAM_MILITIA )
+					break
 
-			case eFD_AITypeIDs.TITAN_NUKE:
-				if ( Distance2D( attacker.GetOrigin(), harvester.GetOrigin() ) < 2000 ) // Do this because bullets from Nuke Titans may trigger the speech from too far
-					PlayFactionDialogueToTeam( "fd_nukeTitanNearBase", TEAM_MILITIA )
-				else
+				case eFD_AITypeIDs.TITAN_NUKE:
+					if ( Distance2D( attacker.GetOrigin(), harvester.GetOrigin() ) < 2000 ) // Do this because bullets from Nuke Titans may trigger the speech from too far
+						PlayFactionDialogueToTeam( "fd_nukeTitanNearBase", TEAM_MILITIA )
+					else
+						PlayFactionDialogueToTeam( "fd_baseShieldTakingDmg", TEAM_MILITIA )
+					break
+
+				default:
 					PlayFactionDialogueToTeam( "fd_baseShieldTakingDmg", TEAM_MILITIA )
-				break
-
-			default:
-				PlayFactionDialogueToTeam( "fd_baseShieldTakingDmg", TEAM_MILITIA )
-				break
+					break
+			}
 		}
-	}
 
-	if ( shieldPercent < 35 && !file.harvesterShieldDown ) // idk i made this up
-		PlayFactionDialogueToTeam( "fd_baseShieldLow", TEAM_MILITIA )
+		if ( shieldPercent < 35 && !file.harvesterShieldDown ) // idk i made this up
+			PlayFactionDialogueToTeam( "fd_baseShieldLow", TEAM_MILITIA )
+	#endif
 
 	if ( harvester.GetShieldHealth() == 0 )
 	{
@@ -2153,8 +2180,10 @@ void function OnHarvesterDamaged( entity harvester, var damageInfo )
 		float oldhealthpercent = ( ( harvester.GetHealth().tofloat() / harvester.GetMaxHealth() ) * 100 )
 		float healthpercent = ( ( newHealth / harvester.GetMaxHealth() ) * 100 )
 
-		if ( healthpercent <= 75 && oldhealthpercent > 75 )
-			PlayFactionDialogueToTeam( "fd_baseHealth75", TEAM_MILITIA )
+		#if FACTION_DIALOGUE_ENABLED
+			if ( healthpercent <= 75 && oldhealthpercent > 75 )
+				PlayFactionDialogueToTeam( "fd_baseHealth75", TEAM_MILITIA )
+		#endif
 
 		if ( healthpercent <= 50 && oldhealthpercent > 50 )
 		{
@@ -2167,10 +2196,13 @@ void function OnHarvesterDamaged( entity harvester, var damageInfo )
 				fd_harvester.rings.Anim_Play( HARVESTER_ANIM_ACTIVE_LOWHP )
 				file.harvesterHalfHealth = true
 			}
-			if ( RandomInt( 100 ) >= 50 )
-				PlayFactionDialogueToTeam( "fd_baseHealth50", TEAM_MILITIA )
-			else
-				PlayFactionDialogueToTeam( "fd_baseHealth50nag", TEAM_MILITIA )
+
+			#if FACTION_DIALOGUE_ENABLED
+				if ( RandomInt( 100 ) >= 50 )
+					PlayFactionDialogueToTeam( "fd_baseHealth50", TEAM_MILITIA )
+				else
+					PlayFactionDialogueToTeam( "fd_baseHealth50nag", TEAM_MILITIA )
+			#endif
 		}
 
 		if ( healthpercent <= 25 && oldhealthpercent > 25 )
@@ -2179,20 +2211,24 @@ void function OnHarvesterDamaged( entity harvester, var damageInfo )
 			EmitSoundOnEntity( harvester, HARVESTER_SND_CRITICAL )
 			EmitSoundOnEntity( harvester, HARVESTER_SND_UNSTABLE )
 
-			if ( RandomInt( 100 ) >= 50 )
-				PlayFactionDialogueToTeam( "fd_baseHealth25", TEAM_MILITIA )
-			else
-				PlayFactionDialogueToTeam( "fd_baseHealth25nag", TEAM_MILITIA )
+			#if FACTION_DIALOGUE_ENABLED
+				if ( RandomInt( 100 ) >= 50 )
+					PlayFactionDialogueToTeam( "fd_baseHealth25", TEAM_MILITIA )
+				else
+					PlayFactionDialogueToTeam( "fd_baseHealth25nag", TEAM_MILITIA )
+			#endif
 		}
 
 		if ( healthpercent <= 15 )
 		{
 			if ( fd_harvester.lastDamage > file.lastHarvesterLowHPAnnouncedTime )
 			{
-				if ( RandomInt( 100 ) >= 50 )
-					PlayFactionDialogueToTeam( "fd_baseLowHealth", TEAM_MILITIA )
-				else
-					PlayFactionDialogueToTeam( "fd_baseShieldLowHolding", TEAM_MILITIA )
+				#if FACTION_DIALOGUE_ENABLED
+					if ( RandomInt( 100 ) >= 50 )
+						PlayFactionDialogueToTeam( "fd_baseLowHealth", TEAM_MILITIA )
+					else
+						PlayFactionDialogueToTeam( "fd_baseShieldLowHolding", TEAM_MILITIA )
+				#endif
 
 				file.lastHarvesterLowHPAnnouncedTime = Time() + 5.0
 			}
@@ -2796,13 +2832,15 @@ void function HarvesterThink()
 					EmitSoundOnEntity( harvester, HARVESTER_SND_SHIELDREGENLOOP )
 				}
 				file.harvesterShieldDown = false
-				if ( GetGlobalNetBool( "FD_waveActive" ) && harvester.GetShieldHealth() < harvester.GetShieldHealthMax() / 2 )
-				{
-					if ( RandomInt( 100 ) >= 50 )
-						PlayFactionDialogueToTeam( "fd_baseShieldRecharging", TEAM_MILITIA, true )
-					else
-						PlayFactionDialogueToTeam( "fd_baseShieldRechargingShort", TEAM_MILITIA, true )
-				}
+				#if FACTION_DIALOGUE_ENABLED
+					if ( GetGlobalNetBool( "FD_waveActive" ) && harvester.GetShieldHealth() < harvester.GetShieldHealthMax() / 2 )
+					{
+						if ( RandomInt( 100 ) >= 50 )
+							PlayFactionDialogueToTeam( "fd_baseShieldRecharging", TEAM_MILITIA, true )
+						else
+							PlayFactionDialogueToTeam( "fd_baseShieldRechargingShort", TEAM_MILITIA, true )
+					}
+				#endif
 				shieldregenpercent = harvester.GetShieldHealth()
 				isRegening = true
 			}
@@ -2814,8 +2852,12 @@ void function HarvesterThink()
 				StopSoundOnEntity( harvester, HARVESTER_SND_SHIELDREGENLOOP )
 				harvester.SetShieldHealth( harvester.GetShieldHealthMax() )
 				EmitSoundOnEntity( harvester, HARVESTER_SND_SHIELDFULL )
-				if ( GetGlobalNetBool( "FD_waveActive" ) && shieldregenpercent <= ( harvester.GetShieldHealthMax() * 0.8 ) ) // Only talk about Harvester shield back up if shield drops below 80% and during waves, prevents too much dialogue cutting just for this
-					PlayFactionDialogueToTeam( "fd_baseShieldUp", TEAM_MILITIA, true )
+
+				#if FACTION_DIALOGUE_ENABLED
+					if ( GetGlobalNetBool( "FD_waveActive" ) && shieldregenpercent <= ( harvester.GetShieldHealthMax() * 0.8 ) ) // Only talk about Harvester shield back up if shield drops below 80% and during waves, prevents too much dialogue cutting just for this
+						PlayFactionDialogueToTeam( "fd_baseShieldUp", TEAM_MILITIA, true )
+				#endif
+
 				isRegening = false
 			}
 			else
@@ -2827,7 +2869,11 @@ void function HarvesterThink()
 		if ( lastShieldHealth > 0 && harvester.GetShieldHealth() == 0 )
 		{
 			EmitSoundOnEntity( harvester, HARVESTER_SND_SHIELDBREAK )
-			PlayFactionDialogueToTeam( "fd_baseShieldDown", TEAM_MILITIA, true )
+
+			#if FACTION_DIALOGUE_ENABLED
+				PlayFactionDialogueToTeam( "fd_baseShieldDown", TEAM_MILITIA, true )
+			#endif
+
 			file.harvesterShieldDown = true
 		}
 

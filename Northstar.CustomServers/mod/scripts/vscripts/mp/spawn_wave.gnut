@@ -1856,13 +1856,16 @@ void function SpawnSmoke( WaveSpawnEvent ornull spawnEvent )
 
 void function PlayWarning( WaveSpawnEvent ornull spawnEvent )
 {
-	if ( !spawnEvent )
-		return
+	#if FACTION_DIALOGUE_ENABLED
 
-	expect WaveSpawnEvent( spawnEvent )
+		if ( !spawnEvent )
+			return
 
-	if ( spawnEvent.soundEventName != "" ) // Sanity check just to prevent crashes from typos since the fallback is to return empty string
-		PlayFactionDialogueToTeam( spawnEvent.soundEventName, TEAM_MILITIA )
+		expect WaveSpawnEvent( spawnEvent )
+
+		if ( spawnEvent.soundEventName != "" ) // Sanity check just to prevent crashes from typos since the fallback is to return empty string
+			PlayFactionDialogueToTeam( spawnEvent.soundEventName, TEAM_MILITIA )
+	#endif
 }
 
 void function waitUntilLessThanAmountAliveEvent( WaveSpawnEvent ornull spawnEvent )

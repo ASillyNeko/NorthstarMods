@@ -384,7 +384,10 @@ void function GiveFlag( entity player, entity flag )
 
 	MessageToTeam( player.GetTeam(), eEventNotifications.PlayerHasEnemyFlag, player, player )
 	EmitSoundOnEntityToTeamExceptPlayer( flag, "UI_CTF_3P_TeamGrabFlag", player.GetTeam(), player )
-	PlayFactionDialogueToTeamExceptPlayer( "ctf_flagPickupFriendly", player.GetTeam(), player )
+
+	#if FACTION_DIALOGUE_ENABLED
+		PlayFactionDialogueToTeamExceptPlayer( "ctf_flagPickupFriendly", player.GetTeam(), player )
+	#endif
 
 	MessageToTeam( flag.GetTeam(), eEventNotifications.PlayerHasFriendlyFlag, player, player )
 	EmitSoundOnEntityToTeam( flag, "UI_CTF_3P_EnemyGrabFlag", flag.GetTeam() )
@@ -462,9 +465,14 @@ void function CaptureFlag( entity player, entity flag )
 
 	if ( GameRules_GetTeamScore( team ) == GetScoreLimit_FromPlaylist() - 1 )
 	{
-		PlayFactionDialogueToTeam( "ctf_notifyWin1more", team )
-		PlayFactionDialogueToTeam( "ctf_notifyLose1more", GetOtherTeam( team ) )
-		foreach ( entity otherPlayer in GetPlayerArray() )
+		#if FACTION_DIALOGUE_ENABLED
+			PlayFactionDialogueToTeam( "ctf_notifyWin1more", team )
+			PlayFactionDialogueToTeam( "ctf_notifyLose1more", GetOtherTeam( team ) )
+		#endif
+
+		array<entity> players = GetPlayerArray()
+
+		foreach ( entity otherPlayer in players )
 			Remote_CallFunction_NonReplay( otherPlayer, "ServerCallback_CTF_PlayMatchNearEndMusic" )
 	}
 }
@@ -638,7 +646,11 @@ void function TryReturnFlag( entity player, entity flag )
 	MessageToTeam( GetOtherTeam( flag.GetTeam() ), eEventNotifications.PlayerReturnedEnemyFlag, null, player )
 	EmitSoundOnEntityToTeam( flag, "UI_CTF_3P_EnemyReturnsFlag", GetOtherTeam( flag.GetTeam() ) )
 	EmitSoundOnEntityOnlyToPlayer( player, player, "UI_CTF_1P_ReturnsFlag" )
-	PlayFactionDialogueToTeam( "ctf_flagReturnedEnemy", GetOtherTeam( flag.GetTeam() ) )
+
+	#if FACTION_DIALOGUE_ENABLED
+		PlayFactionDialogueToTeam( "ctf_flagReturnedEnemy", GetOtherTeam( flag.GetTeam() ) )
+	#endif
+
 	AddPlayerToAssistList( player )
 
 	ResetFlag( flag )
