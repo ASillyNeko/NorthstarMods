@@ -1094,24 +1094,22 @@ void function TryGameModeAnnouncement( entity player )
 
 	file.hasRunGamemodeAnnouncementForPlayer[ player ] <- expect int( level.nv.roundsPlayed )
 
-	#if FACTION_DIALOGUE_ENABLED
-		if ( GetGameState() <= eGameState.Playing )
+	if ( GetGameState() <= eGameState.Playing )
+	{
+		var attackingTeam = level.nv.attackingTeam
+
+		Assert( GameMode_IsDefined( GAMETYPE ) ) // Only game modes that use new style of script should be using this
+
+		if ( attackingTeam != null ) // asymmetric game mode announcement
 		{
-			var attackingTeam = level.nv.attackingTeam
-
-			Assert( GameMode_IsDefined( GAMETYPE ) ) // Only game modes that use new style of script should be using this
-
-			if ( attackingTeam != null ) // asymmetric game mode announcement
-			{
-				if ( player.GetTeam() == attackingTeam )
-					PlayFactionDialogueToPlayer( GameMode_GetGameModeAttackAnnouncement( GAMETYPE ), player )
-				else
-					PlayFactionDialogueToPlayer( GameMode_GetGameModeDefendAnnouncement( GAMETYPE ), player )
-			}
+			if ( player.GetTeam() == attackingTeam )
+				PlayFactionDialogueToPlayer( GameMode_GetGameModeAttackAnnouncement( GAMETYPE ), player )
 			else
-				PlayFactionDialogueToPlayer( GameMode_GetGameModeAnnouncement( GAMETYPE ), player ) // Symmetric game mode announcement
+				PlayFactionDialogueToPlayer( GameMode_GetGameModeDefendAnnouncement( GAMETYPE ), player )
 		}
-	#endif
+		else
+			PlayFactionDialogueToPlayer( GameMode_GetGameModeAnnouncement( GAMETYPE ), player ) // Symmetric game mode announcement
+	}
 
 	Remote_CallFunction_NonReplay( player, "ServerCallback_GameModeAnnouncement" )
 }
