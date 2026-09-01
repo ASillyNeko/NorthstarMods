@@ -599,7 +599,7 @@ void function SpawnPlayerIntoDropship( entity ship, entity player, FirstPersonSe
 		if ( waveSpawn )
 			ScreenFadeFromBlack( player )
 		else
-			ScreenFadeFromBlack( player, 0.5, 0.5 )
+			ScreenFadeFromBlack( player, 1.0, 1.0 )
 	}()
 
 	player.SetIsValidChaseObserverTarget( false )

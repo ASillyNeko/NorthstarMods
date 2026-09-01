@@ -821,6 +821,8 @@ void function GameStateEnter_PickLoadout()
 	ClearWeapons()
 
 	level.nv.minPickLoadOutTime = Time() + GameMode_GetLoadoutSelectTime() + GetCurrentPlaylistVarFloat( "pick_loadout_extension", 0 )
+
+	AllPlayersUnMuteAll()
 }
 
 void function GameRulesThink_PickLoadout()
