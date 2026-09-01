@@ -119,8 +119,10 @@ void function AddPlayerScore( entity targetPlayer, string scoreEventName, entity
 		}
 	}
 
-	if ( ScoreEvent_HasConversation( event ) )
-		PlayFactionDialogueToPlayer( event.conversation, targetPlayer )
+	#if FACTION_DIALOGUE_ENABLED
+		if ( ScoreEvent_HasConversation( event ) )
+			PlayFactionDialogueToPlayer( event.conversation, targetPlayer )
+	#endif
 
 	HandleXPGainForScoreEvent( targetPlayer, event )
 }
@@ -259,7 +261,9 @@ void function ScoreEvent_TitanKilled( entity victim, entity attacker, var damage
 	}
 	else
 	{
-		KilledPlayerTitanDialogue( attacker, victim )
+		#if FACTION_DIALOGUE_ENABLED
+			KilledPlayerTitanDialogue( attacker, victim )
+		#endif
 
 		if ( victim.IsPlayer() )
 			AddPlayerScore( attacker, "KillTitan", attacker )

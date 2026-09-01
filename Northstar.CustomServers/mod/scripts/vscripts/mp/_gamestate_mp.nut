@@ -2079,15 +2079,6 @@ bool function TimeLimit_Complete()
 		foreach ( callbackFunc in svGlobal.thirtySecondsLeftFuncTable )
 			callbackFunc()
 
-	if ( IsSwitchSidesBased() && !HasSwitchedSides() && !IsRoundBased() ) // TODO: fix LTS switching sides announcement
-	{
-		if ( timeLeftSeconds == 30 && timeLeftSeconds != level.lastTimeLeftSeconds )
-		{
-			PlayConversationToTeam( "SwitchingSidesSoon", TEAM_MILITIA )
-			PlayConversationToTeam( "SwitchingSidesSoon", TEAM_IMC )
-		}
-	}
-
 	level.lastTimeLeftSeconds = timeLeftSeconds
 
 	if ( GameTime_PlayingTime() > timeLimit )

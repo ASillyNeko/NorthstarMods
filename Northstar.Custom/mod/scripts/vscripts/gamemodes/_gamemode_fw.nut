@@ -1156,7 +1156,10 @@ bool function FW_RequestTitanAllowed( entity player, array<string> args )
 {
 	if ( !FW_IsPlayerInFriendlyTerritory( player ) ) // is player in friendly base?
 	{
-		PlayFactionDialogueToPlayer( "tw_territoryNag", player ) // notify player
+		#if FACTION_DIALOGUE_ENABLED
+			PlayFactionDialogueToPlayer( "tw_territoryNag", player ) // notify player
+		#endif
+
 		TryPlayTitanfallNegativeSoundToPlayer( player )
 		int objectiveID = 101 // which means "#FW_OBJECTIVE_TITANFALL"
 		Remote_CallFunction_NonReplay( player, "ServerCallback_FW_SetObjective", objectiveID )

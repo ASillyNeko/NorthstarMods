@@ -380,14 +380,14 @@ void function GiveFlag( entity player, entity flag )
 	MessageToPlayer( player, eEventNotifications.YouHaveTheEnemyFlag )
 	EmitSoundOnEntityOnlyToPlayer( player, player, "UI_CTF_1P_GrabFlag" )
 	AddPlayerScore( player, "FlagTaken", player )
-	PlayFactionDialogueToPlayer( "ctf_flagPickupYou", player )
+
+	#if FACTION_DIALOGUE_ENABLED
+		PlayFactionDialogueToPlayer( "ctf_flagPickupYou", player )
+		PlayFactionDialogueToTeamExceptPlayer( "ctf_flagPickupFriendly", player.GetTeam(), player )
+	#endif
 
 	MessageToTeam( player.GetTeam(), eEventNotifications.PlayerHasEnemyFlag, player, player )
 	EmitSoundOnEntityToTeamExceptPlayer( flag, "UI_CTF_3P_TeamGrabFlag", player.GetTeam(), player )
-
-	#if FACTION_DIALOGUE_ENABLED
-		PlayFactionDialogueToTeamExceptPlayer( "ctf_flagPickupFriendly", player.GetTeam(), player )
-	#endif
 
 	MessageToTeam( flag.GetTeam(), eEventNotifications.PlayerHasFriendlyFlag, player, player )
 	EmitSoundOnEntityToTeam( flag, "UI_CTF_3P_EnemyGrabFlag", flag.GetTeam() )

@@ -1265,18 +1265,20 @@ void function PlayerUploadingBonus_Threaded( entity bank, entity player )
 					EmitSoundOnEntityExceptToPlayer( player, player, "HUD_MP_BountyHunt_BankBonusPts_Deposit_End_Successful_3P" )
 
 					// player is MVP
-					int ourScore = player.GetPlayerGameStat( PGS_ASSAULT_SCORE )
-					bool isMVP = true
-					foreach ( teamPlayer in GetPlayerArrayOfTeam( player.GetTeam() ) )
-					{
-						if ( ourScore < teamPlayer.GetPlayerGameStat( PGS_ASSAULT_SCORE ) )
+					#if FACTION_DIALOGUE_ENABLED
+						int ourScore = player.GetPlayerGameStat( PGS_ASSAULT_SCORE )
+						bool isMVP = true
+						foreach ( teamPlayer in GetPlayerArrayOfTeam( player.GetTeam() ) )
 						{
-							isMVP = false
-							break
+							if ( ourScore < teamPlayer.GetPlayerGameStat( PGS_ASSAULT_SCORE ) )
+							{
+								isMVP = false
+								break
+							}
 						}
-					}
-					if ( isMVP )
-						PlayFactionDialogueToPlayer( "bh_mvp", player )
+						if ( isMVP )
+							PlayFactionDialogueToPlayer( "bh_mvp", player )
+						#endif
 				}
 				else // Player was killed or left the bank radius
 				{

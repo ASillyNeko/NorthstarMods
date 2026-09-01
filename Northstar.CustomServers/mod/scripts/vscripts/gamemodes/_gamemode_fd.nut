@@ -1252,10 +1252,12 @@ void function WaveBreak_ShowPlayerBonus()
 	SetJoinInProgressBonus( GetCurrentPlaylistVarInt( "fd_money_per_round", FD_MONEY_PER_ROUND ) )
 	foreach ( entity player in GetPlayerArrayOfTeam( TEAM_MILITIA ) )
 	{
-		if ( isSecondWave() )
-			PlayFactionDialogueToPlayer( "fd_wavePayoutFirst", player, true )
-		else
-			PlayFactionDialogueToPlayer( "fd_wavePayoutAddtnl", player, true )
+		#if FACTION_DIALOGUE_ENABLED
+			if ( isSecondWave() )
+				PlayFactionDialogueToPlayer( "fd_wavePayoutFirst", player, true )
+			else
+				PlayFactionDialogueToPlayer( "fd_wavePayoutAddtnl", player, true )
+		#endif
 
 		AddPlayerScore( player, "FDTeamWave" )
 		AddMoneyToPlayer( player, GetCurrentPlaylistVarInt( "fd_money_per_round", FD_MONEY_PER_ROUND ) )
@@ -2002,8 +2004,10 @@ void function DamageScaleByDifficulty( entity ent, var damageInfo )
 		}
 	}
 
-	if ( damageSourceID == eDamageSourceId.damagedef_stalker_powersupply_explosion_large_at && ent.IsPlayer() && ent.IsTitan() ) // Warn Titan players about Stalkers
-		PlayFactionDialogueToPlayer( "fd_stalkerExploNag", ent )
+	#if FACTION_DIALOGUE_ENABLED
+		if ( damageSourceID == eDamageSourceId.damagedef_stalker_powersupply_explosion_large_at && ent.IsPlayer() && ent.IsTitan() ) // Warn Titan players about Stalkers
+			PlayFactionDialogueToPlayer( "fd_stalkerExploNag", ent )
+	#endif
 
 	if ( difficultyLevel < eFDDifficultyLevel.MASTER && ( IsMinion( attacker ) || IsStalker( attacker ) || IsFragDrone( attacker ) ) ) // On Vanilla, Light Infantry does not scale damage to players for Hard or below
 		return
@@ -2453,28 +2457,30 @@ void function GamemodeFD_OnPlayerKilled( entity victim, entity attacker, var dam
 		file.noDeaths = false
 
 	// play voicelines for amount of players alive
-	array<entity> militiaplayers = GetPlayerArrayOfTeam( TEAM_MILITIA )
-	int deaths = 0
+	#if FACTION_DIALOGUE_ENABLED
+		array<entity> militiaplayers = GetPlayerArrayOfTeam( TEAM_MILITIA )
+		int deaths = 0
 
-	foreach ( entity player in militiaplayers )
-		if ( !IsAlive( player ) || IsAlive( player.GetParent() ) && player.GetParent().GetClassName() == "npc_dropship" )
-			deaths++
+		foreach ( entity player in militiaplayers )
+			if ( !IsAlive( player ) || IsAlive( player.GetParent() ) && player.GetParent().GetClassName() == "npc_dropship" )
+				deaths++
 
-	foreach ( entity player in GetPlayerArrayOfTeam( TEAM_MILITIA ) )
-	{
-		if ( player == victim )
-			continue
+		foreach ( entity player in GetPlayerArrayOfTeam( TEAM_MILITIA ) )
+		{
+			if ( player == victim )
+				continue
 
-		if ( player.GetParent() && player.GetParent().GetClassName() == "npc_dropship" )
-			continue
+			if ( player.GetParent() && player.GetParent().GetClassName() == "npc_dropship" )
+				continue
 
-		if ( deaths == 1 ) // only one pilot died
-			PlayFactionDialogueToPlayer( "fd_singlePilotDown", player )
-		else if ( deaths > 1 && deaths < militiaplayers.len() - 1 ) // multiple pilots died but at least one alive
-			PlayFactionDialogueToPlayer( "fd_multiPilotDown", player )
-		else if ( deaths == militiaplayers.len() - 1 ) // ur shit out of luck ur the only survivor
-			PlayFactionDialogueToPlayer( "fd_onlyPlayerIsAlive", player )
-	}
+			if ( deaths == 1 ) // only one pilot died
+				PlayFactionDialogueToPlayer( "fd_singlePilotDown", player )
+			else if ( deaths > 1 && deaths < militiaplayers.len() - 1 ) // multiple pilots died but at least one alive
+				PlayFactionDialogueToPlayer( "fd_multiPilotDown", player )
+			else if ( deaths == militiaplayers.len() - 1 ) // ur shit out of luck ur the only survivor
+				PlayFactionDialogueToPlayer( "fd_onlyPlayerIsAlive", player )
+		}
+	#endif
 }
 
 void function FD_OnNPCDeath( entity victim, entity attacker, var damageInfo )

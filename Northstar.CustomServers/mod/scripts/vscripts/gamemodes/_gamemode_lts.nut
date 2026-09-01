@@ -64,8 +64,10 @@ void function LTSChallengeForPlayerKilled( entity victim, entity attacker, var d
 			SetPlayerChallengeMeritScore( attacker )
 		}
 
-		if ( GetPlayerArrayOfTeam_Alive( victim.GetTeam() ).len() == 1 ) // last titan on team
-			PlayFactionDialogueToPlayer( "lts_playerLastTitanOnTeam", GetPlayerArrayOfTeam_Alive( victim.GetTeam() )[ 0 ] )
+		#if FACTION_DIALOGUE_ENABLED
+			if ( GetPlayerArrayOfTeam_Alive( victim.GetTeam() ).len() == 1 ) // last titan on team
+				PlayFactionDialogueToPlayer( "lts_playerLastTitanOnTeam", GetPlayerArrayOfTeam_Alive( victim.GetTeam() )[ 0 ] )
+		#endif
 	}
 }
 

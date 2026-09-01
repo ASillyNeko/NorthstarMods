@@ -189,7 +189,10 @@ void function EarnMeterMP_PlayerLifeThink( entity player )
 			{
 				if ( PlayerEarnMeter_GetOwnedFrac( player ) >= 0.75 && PlayerEarnMeter_GetOwnedFrac( player ) < 0.95 && !saidTitanSoon )
 				{
-					PlayFactionDialogueToPlayer( "mp_titanSoon", player )
+					#if FACTION_DIALOGUE_ENABLED
+						PlayFactionDialogueToPlayer( "mp_titanSoon", player )
+					#endif
+
 					saidTitanSoon = true
 				}
 				else if ( PlayerEarnMeter_GetOwnedFrac( player ) < 0.75 )
