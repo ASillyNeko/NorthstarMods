@@ -1278,7 +1278,7 @@ void function PlayerUploadingBonus_Threaded( entity bank, entity player )
 						}
 						if ( isMVP )
 							PlayFactionDialogueToPlayer( "bh_mvp", player )
-						#endif
+					#endif
 				}
 				else // Player was killed or left the bank radius
 				{
