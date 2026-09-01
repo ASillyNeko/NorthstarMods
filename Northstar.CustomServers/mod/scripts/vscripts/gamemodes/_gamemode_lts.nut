@@ -14,6 +14,9 @@ struct
 
 void function GamemodeLts_Init()
 {
+	// signals
+	RegisterSignal( "ClearThirtySecondWallhackHighlight" )
+
 	// gamemode settings
 	SetRoundBased( true )
 	SetSwitchSidesBased( true )
@@ -87,8 +90,31 @@ void function RefreshThirtySecondWallhackHighlight( entity player, entity titan 
 		return
 
 	if ( !Hightlight_HasEnemyHighlight( player, "enemy_sonar" ) )
-		Highlight_SetEnemyHighlight( player, "enemy_sonar" ) // i think this needs a different effect, this works for now tho
+	{
+		Highlight_SetEnemyHighlight( player, "enemy_sonar" )
+		thread ClearThirtySecondWallhackHighlight( player )
+	}
 
-	if ( IsValid( titan ) && !Hightlight_HasEnemyHighlight( titan, "enemy_sonar" ) )
+	if ( IsAlive( titan ) && !Hightlight_HasEnemyHighlight( titan, "enemy_sonar" ) )
+	{
 		Highlight_SetEnemyHighlight( titan, "enemy_sonar" )
+		thread ClearThirtySecondWallhackHighlight( titan )
+	}
+}
+
+void function ClearThirtySecondWallhackHighlight( entity ent )
+{
+	ent.EndSignal( "OnDestroy" )
+	ent.EndSignal( "OnDeath" )
+
+	ent.Signal( "ClearThirtySecondWallhackHighlight" )
+	ent.EndSignal( "ClearThirtySecondWallhackHighlight" )
+
+	while ( GamePlaying() && GameTime_TimeLeftSeconds() >= 25 && GameTime_TimeLeftSeconds() <= 30 )
+		WaitFrame()
+
+	if ( ent.IsPlayer() )
+		UpdatePlayerHighlightsSettings( ent )
+	else
+		Highlight_ClearEnemyHighlight( ent )
 }
