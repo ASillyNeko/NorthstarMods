@@ -79,16 +79,11 @@ void function ClassicMp_Init()
 
 	level.canStillSpawnIntoIntro <- false
 	level.classicMP_levelSetupForIntro <- false
-
 	level.classicMPDropships <- { [TEAM_IMC] = [], [TEAM_MILITIA] = [] }
 
 	// Players on this list will spawn on a dropship at start of classic MP or for wave respawn
-	table playerList = {}
-
 	for ( int i = 0; i < TEAM_COUNT; ++i )
-		playerList[ i ] <- []
-
-	level.dropshipSpawnPlayerList <- playerList
+		file.dropshipSpawnPlayerList[ i ] <- []
 
 	FlagInit( "ClassicMP_UsingCustomIntro", false )
 	FlagInit( "GameModeAlwaysAllowsClassicIntro", true )
@@ -101,7 +96,6 @@ void function ClassicMP_TryDefaultIntroSetup()
 	Assert( IsMultiplayerPlaylist() )
 
 	// If player spawn function hasn't been set yet, we know we have to use the default dropship intro setup
-
 	if ( file.classicMP_introPlayerSpawnFunc != null )
 	{
 		FlagSet( "ClassicMP_UsingCustomIntro" )
@@ -309,9 +303,7 @@ void function AddPlayerToDropshipSpawnPlayerList( entity player )
 {
 	int team = player.GetTeam()
 
-	if ( expect array( expect table( level.dropshipSpawnPlayerList )[ team ] ).append( player ) )
-	{
-	}
+	file.dropshipSpawnPlayerList[ team ].append( player )
 }
 
 void function RemovePlayerFromDropshipSpawnPlayerList( entity player )
@@ -321,11 +313,25 @@ void function RemovePlayerFromDropshipSpawnPlayerList( entity player )
 	if ( team == TEAM_SPECTATOR )
 		return
 
-	if (
-		expect array( expect table( level.dropshipSpawnPlayerList )[ team ] ).contains( player ) &&
-		expect array( expect table( level.dropshipSpawnPlayerList )[ team ] ).removebyvalue( player )
-	)
+	if ( file.dropshipSpawnPlayerList[ team ].contains( player ) )
+		file.dropshipSpawnPlayerList[ team ].removebyvalue( player )
+}
+
+void function UpdateDropshipSpawnPlayerList()
+{
+	for ( int i = 0; i < TEAM_COUNT; ++i )
 	{
+		array<entity> players = file.dropshipSpawnPlayerList[ i ]
+
+		foreach ( entity player in players )
+		{
+			if ( player.GetTeam() != i )
+			{
+				file.dropshipSpawnPlayerList[ i ].removebyvalue( player )
+
+				AddPlayerToDropshipSpawnPlayerList( player )
+			}
+		}
 	}
 }
 
@@ -333,35 +339,26 @@ void function ClearDropshipSpawnPlayerList( int ornull team = null )
 {
 	if ( team != null )
 	{
+		expect int( team )
+
 		Assert( team == TEAM_IMC || team == TEAM_MILITIA, "team must be IMC or Militia" )
 
-		if ( expect array( expect table( level.dropshipSpawnPlayerList )[ team ] ).clear() )
-		{
-		}
+		file.dropshipSpawnPlayerList[ team ].clear()
 	}
 	else
 	{
 		level.canStillSpawnIntoIntro = false // Used as a defensive fix against 1 frame stuff.
 
-		if ( expect array( expect table( level.dropshipSpawnPlayerList )[ TEAM_IMC ] ).clear() )
-		{
-		}
-
-		if ( expect array( expect table( level.dropshipSpawnPlayerList )[ TEAM_MILITIA ] ).clear() )
-		{
-		}
+		file.dropshipSpawnPlayerList[ TEAM_IMC ].clear()
+		file.dropshipSpawnPlayerList[ TEAM_MILITIA ].clear()
 	}
 }
 
 void function ClearClassicDropships()
 {
-	if ( expect array( expect table( level.classicMPDropships )[ TEAM_IMC ] ).clear() )
-	{
-	}
+	file.classicMPDropships[ TEAM_IMC ].clear()
 
-	if ( expect array( expect table( level.classicMPDropships )[ TEAM_MILITIA ] ).clear() )
-	{
-	}
+	file.classicMPDropships[ TEAM_MILITIA ].clear()
 }
 
 void function ClassicMP_Dropship_PrematchCallback()
@@ -379,7 +376,9 @@ bool function PlayerWillSpawnOnDropship( entity player )
 	if ( !level.canStillSpawnIntoIntro )
 		return false
 
-	return !( player in expect table( level.dropshipSpawnPlayerList )[ player.GetTeam() ] )
+	UpdateDropshipSpawnPlayerList()
+
+	return !( file.dropshipSpawnPlayerList[ player.GetTeam() ].contains( player ) )
 }
 
 void function TryStartSpawnPlayersIntoDropship( array<entity> players )
@@ -454,7 +453,9 @@ void function SpawnTeamPlayersIntoDropships( int team, array<entity> dropshipSpa
 
 	jumpAnims.append( clone sequence )
 
-	array players = expect array( expect table( level.dropshipSpawnPlayerList )[ team ] )
+	UpdateDropshipSpawnPlayerList()
+
+	array<entity> players = file.dropshipSpawnPlayerList[ team ]
 	array<entity> ship1Players = []
 	array<entity> ship2Players = []
 
@@ -467,9 +468,9 @@ void function SpawnTeamPlayersIntoDropships( int team, array<entity> dropshipSpa
 		Assert( seatOverride >= 0 && seatOverride < 8, "Illegal seatOverride value " + seatOverride )
 
 		if ( seatOverride < 4 )
-			ship1Players.append( expect entity( players[ 0 ] ) )
+			ship1Players.append( players[ 0 ] )
 		else
-			ship2Players.append( expect entity( players[ 0 ] ) )
+			ship2Players.append( players[ 0 ] )
 	}
 	else
 	{
@@ -478,7 +479,7 @@ void function SpawnTeamPlayersIntoDropships( int team, array<entity> dropshipSpa
 			if ( i >= players.len() )
 				break
 
-			ship1Players.append( expect entity( players[ i ] ) )
+			ship1Players.append( players[ i ] )
 		}
 
 		for ( int i = 4; i < 8; i++ ) // Assuming we never have more than 8 players...
@@ -486,7 +487,7 @@ void function SpawnTeamPlayersIntoDropships( int team, array<entity> dropshipSpa
 			if ( i >= players.len() )
 				break
 
-			ship2Players.append( expect entity( players[ i ] ) )
+			ship2Players.append( players[ i ] )
 		}
 	}
 
@@ -661,13 +662,9 @@ void function SpawnPlayerIntoDropship( entity ship, entity player, FirstPersonSe
 		array<entity> otherPlayers
 		int team = player.GetTeam()
 
-		foreach ( dropshipPlayer in expect array( expect table( level.dropshipSpawnPlayerList )[ team ] ) )
-		{
-			expect entity( dropshipPlayer )
-
+		foreach ( entity dropshipPlayer in file.dropshipSpawnPlayerList[ team ] )
 			if ( dropshipPlayer != player && dropshipPlayer.GetParent() == player.GetParent() )
 				otherPlayers.append( dropshipPlayer )
-		}
 
 		if ( otherPlayers.len() )
 			PlayBattleChatterLineOnlyToPlayer( otherPlayers.getrandom(), player, "bc_pIntroChat" )
@@ -755,7 +752,7 @@ bool function CanSpawnIntoIntroDropship( entity player )
 
 	int team = player.GetTeam()
 
-	if ( expect array( expect table( level.dropshipSpawnPlayerList )[ team ] ).len() > 8 )
+	if ( file.dropshipSpawnPlayerList[ team ].len() > 8 )
 		return false
 
 	return true
@@ -778,7 +775,7 @@ void function SpawnPlayerIntoSlotInDropship( entity player, bool waveSpawn = fal
 
 	Assert( expect array( expect table( level.classicMPDropships )[ team ] ).len(), "Tried to spawn player into dropship in progress but no dropship is active!" )
 
-	int numOfDropshipSpawningTeammates = expect array( expect table( level.dropshipSpawnPlayerList )[ team ] ).len()
+	int numOfDropshipSpawningTeammates = file.dropshipSpawnPlayerList[ team ].len()
 	// printt( "numOfDropshipSpawningTeammates " + numOfDropshipSpawningTeammates )
 
 	AddPlayerToDropshipSpawnPlayerList( player )
