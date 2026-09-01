@@ -355,8 +355,13 @@ void function ClearDropshipSpawnPlayerList( int ornull team = null )
 
 void function ClearClassicDropships()
 {
-	level.classicMPDropships[ TEAM_IMC ].clear()
-	level.classicMPDropships[ TEAM_MILITIA ].clear()
+	if ( expect array( expect table( level.classicMPDropships )[ TEAM_IMC ] ).clear() )
+	{
+	}
+
+	if ( expect array( expect table( level.classicMPDropships )[ TEAM_MILITIA ] ).clear() )
+	{
+	}
 }
 
 void function ClassicMP_Dropship_PrematchCallback()
