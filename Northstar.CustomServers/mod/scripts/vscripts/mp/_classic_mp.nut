@@ -143,13 +143,13 @@ bool function ClassicMP_Dropship_IntroLevelSetupFunc()
 	array<entity> militiaSpawns = GetDropshipStartSpawnsForTeam( TEAM_MILITIA )
 
 	// Assume 2 on each team. This restriction can be loosened later ( might want to randomize, etc )
-	if ( imcSpawns.len() < 2 )
+	if ( imcSpawns.len() != 2 )
 	{
 		Warning( "IMC Dropship start spawnpoints not equal to 2! Not using DropshipStartSpawn" )
 		return false
 	}
 
-	if ( militiaSpawns.len() < 2 )
+	if ( militiaSpawns.len() != 2 )
 	{
 		Warning( "Militia Dropship start spawnpoints not equal to 2! Not using DropshipStartSpawn" )
 		return false
@@ -881,9 +881,9 @@ bool function DebugTestDropshipSpecificSpawn( int seat )
 
 	array<entity> spawns = GetDropshipStartSpawnsForTeam( team )
 
-	if ( spawns.len() < 2 )
+	if ( spawns.len() != 2 )
 	{
-		printt( "Warning! Need exactly 2 dropship spawns for team: " + teamStr + " . " + spawns.len() + " detected. Returning" )
+		printt( "Need exactly 2 dropship spawns for team: " + teamStr + " . " + spawns.len() + " detected. Returning" )
 		return false
 	}
 
