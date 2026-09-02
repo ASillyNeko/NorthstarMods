@@ -134,9 +134,6 @@ void function OnHardpointEnter( entity trigger, entity player )
 	if ( hpState.capPlayers.find( player ) == -1 )
 		hpState.capPlayers.append( player )
 
-	if ( GamePlaying() )
-		Hardpoint_ThinkTick( hpState )
-
 	player.SetPlayerNetInt( "playerHardpointID", hp.GetHardpointID() )
 
 	player.Signal( "CapturePointPlayerLeft" ) // reset this in case the function is called multiple times
@@ -157,9 +154,6 @@ void function OnHardpointLeave( entity trigger, entity player )
 	int index = hpState.capPlayers.find( player )
 	if ( index != -1 )
 		hpState.capPlayers.fastremove( index )
-
-	if ( GamePlaying() )
-		Hardpoint_ThinkTick( hpState )
 
 	if ( player.s.isPlayingCapturingSound )
 	{
@@ -445,19 +439,7 @@ void function CaptureHardPointAllied( entity hardpoint, int team, float deltaTim
 
 		hardpoint.s.lastPower = cappers
 	}
-
-	if ( CapturePoint_GetCaptureProgress( hardpoint ) >= 1.0 && hardpoint.GetHardpointState() < CAPTURE_POINT_STATE_CAPTURED )
-	{
-		// eh
-		if ( hardpoint.GetHardpointState() == CAPTURE_POINT_STATE_SELF_UNAMPING && CPstate.ampingEnabled )
-			hardpoint.SetHardpointState( CAPTURE_POINT_STATE_AMPING )
-		else if ( hardpoint.GetHardpointState() == CAPTURE_POINT_STATE_SELF_UNAMPING )
-			hardpoint.SetHardpointState( CAPTURE_POINT_STATE_CAPTURED )
-		else
-			SetCaptureHardpoint( hardpoint, team, false )
-	}
-
-	if ( CPstate.ampingEnabled )
+	else if ( CPstate.ampingEnabled ) // if the team exits the hardpoint before 0.0167 seconds after it can be amped, the enemy team can instant capture it. so don't remove else if
 	{
 		if ( CapturePoint_GetCaptureProgress( hardpoint ) >= 2.0 )
 		{
@@ -485,6 +467,17 @@ void function CaptureHardPointAllied( entity hardpoint, int team, float deltaTim
 
 			hardpoint.s.lastPower = cappers
 		}
+	}
+
+	if ( CapturePoint_GetCaptureProgress( hardpoint ) >= 1.0 && hardpoint.GetHardpointState() < CAPTURE_POINT_STATE_CAPTURED )
+	{
+		// eh
+		if ( hardpoint.GetHardpointState() == CAPTURE_POINT_STATE_SELF_UNAMPING && CPstate.ampingEnabled )
+			hardpoint.SetHardpointState( CAPTURE_POINT_STATE_AMPING )
+		else if ( hardpoint.GetHardpointState() == CAPTURE_POINT_STATE_SELF_UNAMPING )
+			hardpoint.SetHardpointState( CAPTURE_POINT_STATE_CAPTURED )
+		else
+			SetCaptureHardpoint( hardpoint, team, false )
 	}
 }
 
@@ -526,8 +519,7 @@ void function CaptureHardPointEnemy( entity hardpoint, int team, float deltaTime
 			}
 		}
 	}
-
-	if ( CapturePoint_GetCaptureProgress( hardpoint ) <= 1.001 )
+	else if ( CapturePoint_GetCaptureProgress( hardpoint ) <= 1.001 )
 	{
 		hardpoint.SetHardpointState( CAPTURE_POINT_STATE_CAPPING )
 		hardpoint.s.wasJustCapping = true
