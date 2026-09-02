@@ -384,6 +384,13 @@ void function Hardpoint_ThinkTick( HardpointState hardpoint )
 		}
 	}
 
+	if (
+		IsIMCOrMilitiaTeam( CapturePoint_GetOwningTeam( hardpoint.ent ) ) &&
+		CapturePoint_GetCappingTeam( hardpoint.ent ) == GetOtherTeam( CapturePoint_GetOwningTeam( hardpoint.ent ) ) ||
+		CapturePoint_GetState( hardpoint.ent ) & CAPTURE_POINT_FLAGS_CONTESTED
+	)
+		hardpoint.ent.s.trigger.Signal( "CP_AWARD_TEAM_OWNED_POINTS_SIGNAL" )
+
 	table oldStates = { oldTeam = oldTeam, oldState = oldState }
 
 	if ( oldState != hardpoint.ent.GetHardpointState() )
@@ -677,9 +684,6 @@ entity function AwardTeamOwnedPoints( entity hardpoint )
 	while ( GetGameState() == eGameState.Playing )
 	{
 		Wait( TEAM_OWNED_SCORE_FREQ )
-
-		if ( CapturePoint_GetCappingTeam( hardpoint ) == GetOtherTeam( team ) || CapturePoint_GetState( hardpoint ) & CAPTURE_POINT_FLAGS_CONTESTED )
-			return
 
 		AddTeamScore( team, CapturePoint_GetState( hardpoint ) & CAPTURE_POINT_FLAGS_AMPED ? TEAMPOINTVALUE_AMPED_HARDPOINT_OWNED : TEAMPOINTVALUE_HARDPOINT_OWNED )
 	}
