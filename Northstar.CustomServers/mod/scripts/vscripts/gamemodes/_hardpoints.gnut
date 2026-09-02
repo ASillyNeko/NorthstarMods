@@ -267,6 +267,7 @@ void function Hardpoint_ThinkTick( HardpointState hardpoint )
 			{
 				EmitSoundOnEntityOnlyToPlayer( hardpoint.ent, player, "Hardpoint_StopProgressBar_Event" )
 
+				player.s.isPlayingAmpingCapturingSound = false
 				player.s.isPlayingCapturingSound = false
 			}
 		}
