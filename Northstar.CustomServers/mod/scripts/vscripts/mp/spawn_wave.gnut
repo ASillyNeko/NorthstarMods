@@ -72,7 +72,6 @@ global struct WaveSpawnEvent
 
 struct
 {
-	int difficultyLevel = 0
 	table<string, array<WaveSpawnEvent> > waveSubGroups
 	array<string> waveActiveSubGroups
 	int gruntAmountWithATWeapons = 0
@@ -107,7 +106,6 @@ void function SpawnWave_Init()
 {
 	RegisterSignal( "StopWaveSpawner" )
 
-	file.difficultyLevel = GetDifficultyLevel() // Refresh this only on map load, to avoid midgame commands messing up with difficulties (i.e setting mp_gamemode fd_hard midgame in a regular match through console on local host would immediately make Stalkers spawns with EPG)
 	file.gruntAmountWithShields = GetCurrentPlaylistVarInt( "fd_grunt_shield_captains", 0 )
 	file.gruntAmountWithATWeapons = GetCurrentPlaylistVarInt( "fd_grunt_at_weapon_users", 0 )
 }
@@ -734,7 +732,7 @@ void function SpawnArcTitan( WaveSpawnEvent ornull spawnEvent )
 	thread NPCNav_FD( npc, spawnEvent.route )
 	if ( GetMapName().find( "mp_lf_" ) == null )
 	{
-		switch ( file.difficultyLevel )
+		switch ( difficultyLevel )
 		{
 			case eFDDifficultyLevel.EASY:
 			case eFDDifficultyLevel.NORMAL:
@@ -968,7 +966,7 @@ void function SpawnIonTitan( WaveSpawnEvent ornull spawnEvent )
 	entity npc = CreateNPCTitan( "titan_atlas", TEAM_IMC, spawnorigin, spawnEvent.angles )
 	SetSpawnOption_Titanfall( npc )
 	npc.kv.reactChance = 60
-	if ( file.difficultyLevel == eFDDifficultyLevel.EASY || difficultyLevel == eFDDifficultyLevel.NORMAL )
+	if ( difficultyLevel == eFDDifficultyLevel.EASY || difficultyLevel == eFDDifficultyLevel.NORMAL )
 		SetSpawnOption_AISettings( npc, "npc_titan_atlas_stickybomb" )
 	else
 		SetSpawnOption_AISettings( npc, "npc_titan_atlas_stickybomb_boss_fd" )
@@ -1014,7 +1012,7 @@ void function SpawnScorchTitan( WaveSpawnEvent ornull spawnEvent )
 
 	entity npc = CreateNPCTitan( "titan_ogre", TEAM_IMC, spawnorigin, spawnEvent.angles )
 	SetSpawnOption_Titanfall( npc )
-	if ( file.difficultyLevel == eFDDifficultyLevel.EASY || difficultyLevel == eFDDifficultyLevel.NORMAL )
+	if ( difficultyLevel == eFDDifficultyLevel.EASY || difficultyLevel == eFDDifficultyLevel.NORMAL )
 		SetSpawnOption_AISettings( npc, "npc_titan_ogre_meteor" )
 	else
 		SetSpawnOption_AISettings( npc, "npc_titan_ogre_meteor_boss_fd" )
@@ -1064,7 +1062,7 @@ void function SpawnRoninTitan( WaveSpawnEvent ornull spawnEvent )
 	entity npc = CreateNPCTitan( "titan_stryder", TEAM_IMC, spawnorigin, spawnEvent.angles )
 	SetSpawnOption_Titanfall( npc )
 	npc.kv.reactChance = 60
-	if ( file.difficultyLevel == eFDDifficultyLevel.EASY || difficultyLevel == eFDDifficultyLevel.NORMAL )
+	if ( difficultyLevel == eFDDifficultyLevel.EASY || difficultyLevel == eFDDifficultyLevel.NORMAL )
 		SetSpawnOption_AISettings( npc, "npc_titan_stryder_leadwall" )
 	else
 		SetSpawnOption_AISettings( npc, "npc_titan_stryder_leadwall_boss_fd" )
@@ -1112,7 +1110,7 @@ void function SpawnToneTitan( WaveSpawnEvent ornull spawnEvent )
 	entity npc = CreateNPCTitan( "titan_atlas", TEAM_IMC, spawnorigin, spawnEvent.angles )
 	SetSpawnOption_Titanfall( npc )
 	npc.kv.reactChance = 60
-	if ( file.difficultyLevel == eFDDifficultyLevel.EASY || difficultyLevel == eFDDifficultyLevel.NORMAL )
+	if ( difficultyLevel == eFDDifficultyLevel.EASY || difficultyLevel == eFDDifficultyLevel.NORMAL )
 		SetSpawnOption_AISettings( npc, "npc_titan_atlas_tracker" )
 	else
 		SetSpawnOption_AISettings( npc, "npc_titan_atlas_tracker_boss_fd" )
@@ -1159,7 +1157,7 @@ void function SpawnLegionTitan( WaveSpawnEvent ornull spawnEvent )
 	entity npc = CreateNPCTitan( "titan_ogre", TEAM_IMC, spawnorigin, spawnEvent.angles )
 	SetSpawnOption_Titanfall( npc )
 	npc.kv.reactChance = 60
-	if ( file.difficultyLevel == eFDDifficultyLevel.EASY || difficultyLevel == eFDDifficultyLevel.NORMAL )
+	if ( difficultyLevel == eFDDifficultyLevel.EASY || difficultyLevel == eFDDifficultyLevel.NORMAL )
 		SetSpawnOption_AISettings( npc, "npc_titan_ogre_minigun" )
 	else
 		SetSpawnOption_AISettings( npc, "npc_titan_ogre_minigun_boss_fd" )
@@ -1206,7 +1204,7 @@ void function SpawnMonarchTitan( WaveSpawnEvent ornull spawnEvent )
 	entity npc = CreateNPCTitan( "titan_atlas", TEAM_IMC, spawnorigin, spawnEvent.angles )
 	SetSpawnOption_Titanfall( npc )
 	npc.kv.reactChance = 60
-	if ( file.difficultyLevel == eFDDifficultyLevel.EASY || difficultyLevel == eFDDifficultyLevel.NORMAL )
+	if ( difficultyLevel == eFDDifficultyLevel.EASY || difficultyLevel == eFDDifficultyLevel.NORMAL )
 		SetSpawnOption_AISettings( npc, "npc_titan_atlas_vanguard" )
 	else
 		SetSpawnOption_AISettings( npc, "npc_titan_atlas_vanguard_boss_fd" )
@@ -1536,7 +1534,7 @@ void function SpawnDroppodStalker( WaveSpawnEvent ornull spawnEvent )
 		guys.append( guy )
 	}
 
-	switch ( file.difficultyLevel )
+	switch ( difficultyLevel )
 	{
 		case eFDDifficultyLevel.EASY:
 		case eFDDifficultyLevel.NORMAL:
@@ -1993,7 +1991,7 @@ void function SlowEnemyMovementBasedOnDifficulty( entity npc )
 	// This is not exact vanilla behavior i think, but enemies definetely moves slower on Frontier Defense than player autotitans
 	Assert( IsValid( npc ) && npc.IsNPC(), "Tried to set up movespeed scale in non-NPC entity: " + npc )
 
-	switch ( file.difficultyLevel )
+	switch ( difficultyLevel )
 	{
 		case eFDDifficultyLevel.EASY:
 		case eFDDifficultyLevel.NORMAL:
@@ -2013,7 +2011,7 @@ void function SetupGruntBehaviorFlags( entity npc )
 	Assert( IsValid( npc ) && IsGrunt( npc ), "Entity is not a Grunt: " + npc )
 
 	npc.EnableNPCFlag( NPC_ALLOW_HAND_SIGNALS )
-	switch ( file.difficultyLevel )
+	switch ( difficultyLevel )
 	{
 		case eFDDifficultyLevel.EASY:
 		case eFDDifficultyLevel.NORMAL:
@@ -2038,7 +2036,7 @@ void function GruntTargetsTitan( entity npc )
 		return
 
 	OnEnemyChanged_MinionSwitchToHeavyArmorWeapon( npc )
-	switch ( file.difficultyLevel )
+	switch ( difficultyLevel )
 	{
 		case eFDDifficultyLevel.EASY:
 		case eFDDifficultyLevel.NORMAL:
@@ -2131,7 +2129,7 @@ bool function ShouldSkipEventForDifficulty( WaveSpawnEvent event )
 
 	if ( !allDifficulties )
 	{
-		switch ( file.difficultyLevel )
+		switch ( difficultyLevel )
 		{
 			case ( eFDDifficultyLevel.EASY ):
 				return invertedFilter ? easySpawn : !easySpawn
