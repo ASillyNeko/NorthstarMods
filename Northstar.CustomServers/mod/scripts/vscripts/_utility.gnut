@@ -2694,9 +2694,12 @@ bool function NearFlagSpawnPoint( vector dropPoint )
 
 	foreach ( flagSpawnPoint in svGlobal.flagSpawnPoints )
 	{
-		vector fspOrigin = flagSpawnPoint.GetOrigin()
-		if ( Distance( fspOrigin, dropPoint ) < SAFE_TITANFALL_DISTANCE_CTF )
-			return true
+		if ( IsValid( flagSpawnPoint ) )
+		{
+			vector fspOrigin = flagSpawnPoint.GetOrigin()
+			if ( Distance( fspOrigin, dropPoint ) < SAFE_TITANFALL_DISTANCE_CTF )
+				return true
+		}
 	}
 
 	return false
