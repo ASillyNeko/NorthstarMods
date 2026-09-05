@@ -478,4 +478,3 @@ var function TitanHulldropSpawnpoint( FlightPath flightPath, vector origin, floa
 {
 	return HullTraceDropPoint( flightPath, origin, 20 )
 }
-

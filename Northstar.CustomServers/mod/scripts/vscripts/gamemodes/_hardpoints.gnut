@@ -6,6 +6,7 @@ global function OnHardpointLeave
 global function Hardpoint_Think
 global function TrackChevronStates
 global function Hardpoints_OnPlayerKilled_UpdateMedals
+global function NearHardpoint
 
 global const INVALID_HARDPOINT_ID = 1023
 
@@ -645,7 +646,10 @@ void function SetAmpedHardpoint( entity hardpoint, int team )
 {
 	HardpointState hpState = GetHardpointState( hardpoint )
 
-	GamemodeCP_VO_Amped( hardpoint )
+	#if FACTION_DIALOGUE_ENABLED
+		GamemodeCP_VO_Amped( hardpoint )
+	#endif
+
 	if ( !IsValid( hardpoint.s.prop.GetParent() ) )
 		thread PlayAnim( hardpoint.s.prop, "mh_inactive_2_active" )
 
@@ -774,10 +778,8 @@ HardpointState function GetHardpointState( entity hp )
 // respawn can't even really use their vo think function since the state var uses flags instead of state therefore this is correct
 void function GamemodeCP_VO_Amped( entity hardpoint )
 {
-	#if FACTION_DIALOGUE_ENABLED
-		PlayFactionDialogueToTeam( "amphp_youAmped" + CapturePoint_GetGroup( hardpoint ), CapturePoint_GetCappingTeam( hardpoint ) )
-		PlayFactionDialogueToTeam( "amphp_enemyAmped" + CapturePoint_GetGroup( hardpoint ), GetOtherTeam( CapturePoint_GetCappingTeam( hardpoint ) ) )
-	#endif
+	PlayFactionDialogueToTeam( "amphp_youAmped" + CapturePoint_GetGroup( hardpoint ), CapturePoint_GetCappingTeam( hardpoint ) )
+	PlayFactionDialogueToTeam( "amphp_enemyAmped" + CapturePoint_GetGroup( hardpoint ), GetOtherTeam( CapturePoint_GetCappingTeam( hardpoint ) ) )
 }
 
 void function CheckPlayerChallenges( entity player )
@@ -792,4 +794,17 @@ void function CheckPlayerChallenges( entity player )
 	else
 		return
 	SetPlayerChallengeMeritScore( player )
+}
+
+bool function NearHardpoint( vector dropPoint )
+{
+	foreach ( hpState in CPstate.hardpoints )
+	{
+		vector origin = hpState.ent.GetOrigin()
+
+		if ( Distance( origin, dropPoint ) < SAFE_TITANFALL_DISTANCE )
+			return true
+	}
+
+	return false
 }

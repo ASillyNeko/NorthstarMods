@@ -30,7 +30,11 @@ bool function ClientCommand_OnDevnetBugScreenshot( entity player, array<string> 
 
 bool function SafeForTitanFall( vector dropPoint )
 {
-	return true
+	bool nearHardpoint = NearHardpoint( dropPoint )
+	bool nearFlagSpawnPoint = NearFlagSpawnPoint( dropPoint )
+	bool nearDisallowedTitanfall = expect bool( NearDisallowedTitanfall( dropPoint ) )
+
+	return !nearHardpoint && !nearFlagSpawnPoint && !nearDisallowedTitanfall
 }
 
 bool function ForceMyTeamWin( entity player, array<string> args )

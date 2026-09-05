@@ -132,4 +132,5 @@ void function PrivateMatchModesInit()
 	AddPrivateMatchModeSettingEnum( "DEV", "riff_wave_spawn", [ "Disabled", "Fixed Interval", "Player Death", "Manual", "Dropship" ], "0", "Wave Spawn" )
 	AddPrivateMatchModeSettingEnum( "DEV", "run_evac", [ "Default", "Always" ], "0", "Run Evac" )
 	AddPrivateMatchModeSettingEnum( "DEV", "script_leak", [ "Disabled", "Enabled" ], "0", "Script leak" )
+	AddPrivateMatchModeSettingEnum( "DEV", "enable_spectre_hacking", [ "Disabled", "Enabled" ], "1", "Spectre Hacking" )
 }

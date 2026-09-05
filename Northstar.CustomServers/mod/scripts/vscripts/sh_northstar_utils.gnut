@@ -4,7 +4,7 @@ globalize_all_functions
 
 struct
 {
-	table<entity, float> playerChangeTeamTimeBuffer
+	table<entity, float> playerChangeTeamTimeBuffer = {}
 	bool gamemodeTeamSwitchEnabled = true
 } file
 
