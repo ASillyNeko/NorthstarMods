@@ -2178,6 +2178,9 @@ bool function WillShowRoundWinningKillReplay()
 	if ( file.roundWinningKillReplayViewEnt == null ) // Check for null specifically instead of IsValid because players can disconnect and become invalid, and we only want this to be false because we set it to null explicitly. ( Want to tell people that round winning kill replay was cancelled if a player disconnected)
 		return false
 
+	if ( svGlobal.winReason != eWinReason.SCORE_LIMIT && svGlobal.winReason != eWinReason.ELIMINATION )
+		return false
+
 	if ( IsRoundBased() ) // Note the order of the checks: RoundBasedModes that are also SwitchSidesBased will show in WinnerDetermined.
 		return currentGameState == eGameState.WinnerDetermined
 

@@ -69,6 +69,16 @@ void function InitMainMenu()
 		if ( DevStartPoints() )
 			AddMenuFooterOption( menu, BUTTON_SHOULDER_LEFT, "#Y_BUTTON_DEV_MENU", "#DEV_MENU", OpenSinglePlayerDevMenu )
 	#endif // DEV
+
+	// fixes main menu not reappearing on ui compile error :D
+	if ( !IsConnected() )
+	{
+		delaythread( 0.0001 ) void function() : ()
+		{
+			if ( !IsConnected() && !uiGlobal.menuStack.len() )
+				UICodeCallback_ActivateMenus()
+		}()
+	}
 }
 
 #if CONSOLE_PROG
@@ -82,6 +92,8 @@ void function OnMainMenu_Open()
 {
 	Signal( uiGlobal.signalDummy, "EndOnMainMenu_Open" )
 	EndSignal( uiGlobal.signalDummy, "EndOnMainMenu_Open" )
+
+	DisableRemoteMods()
 
 	#if !VANILLA
 		SetConVarString( "communities_hostname", "" ) // disable communities due to crash exploits that are still possible through it

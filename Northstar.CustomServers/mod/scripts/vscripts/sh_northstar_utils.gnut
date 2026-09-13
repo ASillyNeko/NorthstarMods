@@ -26,6 +26,9 @@ void function NorthstarUtils_Before_Init()
 
 void function NorthstarUtils_After_Init()
 {
+	#if CLIENT
+		delaythread( 0.5 ) DisableRemoteMods()
+	#endif
 }
 
 // whether the game should return to the lobby on GameRules_EndMatch()
@@ -35,14 +38,14 @@ bool function ShouldReturnToLobby()
 }
 
 // reload mods and optionally reloads the current map or rejoins the server
-void function ReloadMods( bool reloadorretry = false )
+void function ReloadMods( bool reloadOrRetry = false )
 {
 	NSReloadMods()
 
 	#if SERVER
 		ServerCommand( "loadPlaylists; weapon_reparse_server; _playerSettings_reparse_Server; aisettings_reparse" )
 
-		if ( reloadorretry )
+		if ( reloadOrRetry )
 			ServerCommand( "map " + GetMapName(), 0.5 )
 	#elseif CLIENT
 		entity client = GetLocalClientPlayer()
@@ -52,16 +55,15 @@ void function ReloadMods( bool reloadorretry = false )
 
 		client.ClientCommand( "reload_localization; loadPlaylists; weapon_reparse; playerSettings_reparse; aisettings_reparse_client" )
 
-		if ( reloadorretry )
+		if ( reloadOrRetry )
 			client.ClientCommand( "retry" )
 	#else
-		ClientCommand( "reload_localization" )
-		ClientCommand( "loadPlaylists" )
+		ClientCommand( "reload_localization; loadPlaylists" )
 
 		if ( IsConnected() )
 			ClientCommand( "weapon_reparse; playerSettings_reparse; aisettings_reparse_client" )
 
-		if ( reloadorretry )
+		if ( reloadOrRetry )
 		{
 			if ( IsConnected() )
 				ClientCommand(
@@ -72,6 +74,49 @@ void function ReloadMods( bool reloadorretry = false )
 		}
 	#endif
 }
+
+#if !SERVER
+	void function DisableRemoteMods()
+	{
+		#if CLIENT
+			if ( !NSIsServerVMValid() )
+				return
+
+			entity client = GetLocalClientPlayer()
+
+			if ( !IsValid( client ) )
+				return
+		#endif
+
+		array<ModInfo> mods = NSGetModsInformation()
+		bool reloadMods = false
+
+		foreach ( ModInfo mod in mods )
+		{
+			if ( mod.isRemote && mod.enabled )
+			{
+				string modName = mod.name
+				string modVersion = mod.version
+
+				NSSetModEnabled( modName, modVersion, false )
+
+				reloadMods = true
+			}
+		}
+
+		if ( reloadMods )
+		{
+			ReloadMods()
+
+			#if CLIENT
+				client.ClientCommand( "map " + GetMapName() )
+				client.ClientCommand( "uiscript_reset" )
+			#else
+				ClientCommand( "uiscript_reset" )
+			#endif
+		}
+	}
+#endif
 
 #if !UI
 	array<entity> function gn()

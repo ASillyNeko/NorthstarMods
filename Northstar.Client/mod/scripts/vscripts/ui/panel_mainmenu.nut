@@ -550,7 +550,6 @@ void function OnPlayNSButton_Activate( var button )
 {
 	if ( !Hud_IsLocked( button ) )
 	{
-		SetConVarString( "communities_hostname", "" ) // disable communities due to crash exploits that are still possible through it
 		NSTryAuthWithLocalServer()
 		thread TryAuthWithLocalServer()
 	}
