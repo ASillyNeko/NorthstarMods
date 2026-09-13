@@ -102,7 +102,7 @@
 			"name": "NSDisconnectPlayer",
 			"helpText": "Disconnects the player from the server with the given reason",
 			"returnTypeString": "bool",
-			"argTypes": "entity player, string reason"
+			"argTypes": "entity player, string reason = \"\""
 		},
 		{
 			"name": "GetUserInfoKVString_Internal",
