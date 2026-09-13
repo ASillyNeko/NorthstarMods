@@ -257,6 +257,12 @@
 			"argTypes": ""
 		},
 		{
+			"name": "NSGetModsInformation",
+			"helpText": "",
+			"returnTypeString": "array<ModInfo>",
+			"argTypes": ""
+		},
+		{
 			"name": "NSSetModEnabled",
 			"helpText": "",
 			"returnTypeString": "void",
