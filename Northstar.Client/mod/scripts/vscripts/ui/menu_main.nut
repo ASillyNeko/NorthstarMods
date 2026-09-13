@@ -70,7 +70,7 @@ void function InitMainMenu()
 			AddMenuFooterOption( menu, BUTTON_SHOULDER_LEFT, "#Y_BUTTON_DEV_MENU", "#DEV_MENU", OpenSinglePlayerDevMenu )
 	#endif // DEV
 
-	// fixes main menu not reappearing on ui compile error :D
+	// fixes no main menu after ui compile error :D
 	if ( !IsConnected() )
 	{
 		delaythread( 0.0001 ) void function() : ()
