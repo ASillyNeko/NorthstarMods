@@ -173,13 +173,16 @@ bool function EvacEpilogueShouldLeaveEarly( entity dropship )
 
 void function EvacEpilogueCompleted( entity dropship )
 {
+	SetGlobalForcedDialogueOnly( true ) // Stop misc chatter
+
 	wait 5.0
 
 	foreach ( entity player in GetPlayerArray() )
 		ScreenFadeToBlackForever( player, 2.0 )
 
 	wait 2.0
-	if ( GetGameState() != eGameState.Postmatch )
+
+	if ( GetGameState() >= eGameState.WinnerDetermined )
 		SetGameState( eGameState.Postmatch )
 }
 
