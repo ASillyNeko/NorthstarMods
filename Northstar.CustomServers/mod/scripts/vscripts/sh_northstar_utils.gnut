@@ -65,15 +65,44 @@ void function ReloadMods( bool reloadOrRetry = false )
 
 		if ( reloadOrRetry )
 		{
-			if ( IsConnected() )
-				ClientCommand(
-					"script_client delaythread ( 0.0001 ) void function() { if ( IsValid( GetLocalClientPlayer() ) ) GetLocalClientPlayer().ClientCommand( \"retry\" ) }()"
-				)
+			if ( CanRunClientScript() )
+				RunClientScript( "DelayedRetry" )
 
 			ClientCommand( "uiscript_reset" )
 		}
 	#endif
 }
+
+#if CLIENT
+	void function DelayedRetry()
+	{
+		thread void function() : ()
+		{
+			WaitFrame()
+
+			if ( IsValid( GetLocalClientPlayer() ) )
+				GetLocalClientPlayer().ClientCommand( "retry" )
+		}()
+	}
+
+	void function DelayedMapChange( bool EOGOpenInLobby )
+	{
+		thread void function() : ( EOGOpenInLobby )
+		{
+			WaitFrame()
+
+			RunUIScript( "EOGOpenInLobby", EOGOpenInLobby )
+
+			if ( IsValid( GetLocalClientPlayer() ) )
+				GetLocalClientPlayer().ClientCommand( "map " + GetMapName() )
+		}()
+	}
+#elseif UI
+	void function EOGOpenInLobby( bool EOGOpenInLobby )
+	{
+		uiGlobal.EOGOpenInLobby = EOGOpenInLobby
+	}
+#endif
 
 #if !SERVER
 	void function DisableTempMods()
@@ -86,34 +115,35 @@ void function ReloadMods( bool reloadOrRetry = false )
 
 			if ( !IsValid( client ) )
 				return
-		#endif
 
-		array<ModInfo> mods = NSGetModsInformation()
-		bool reloadMods = false
+			RunUIScript( "DisableTempMods" )
+		#else
+			array<ModInfo> mods = NSGetModsInformation()
+			bool reloadMods = false
 
-		foreach ( ModInfo mod in mods )
-		{
-			if ( mod.enabled != mod.enabledOld || ( mod.isRemote && mod.enabled ) )
+			foreach ( ModInfo mod in mods )
 			{
-				string modName = mod.name
-				string modVersion = mod.version
+				if ( mod.enabled != mod.enabledOld || ( mod.isRemote && mod.enabled ) )
+				{
+					string modName = mod.name
+					string modVersion = mod.version
 
-				NSSetModEnabled( modName, modVersion, mod.enabled != mod.enabledOld ? mod.enabledOld : false, false )
+					NSSetModEnabled( modName, modVersion, mod.enabled != mod.enabledOld ? mod.enabledOld : false, false )
 
-				reloadMods = true
+					reloadMods = true
+				}
 			}
-		}
 
-		if ( reloadMods )
-		{
-			ReloadMods()
+			if ( reloadMods )
+			{
+				ReloadMods()
 
-			#if CLIENT
-				client.ClientCommand( "map " + GetMapName() + "; uiscript_reset" )
-			#else
+				if ( CanRunClientScript() )
+					RunClientScript( "DelayedMapChange", uiGlobal.activeMenu == GetMenu( "PostGameMenu" ) )
+
 				ClientCommand( "uiscript_reset" )
-			#endif
-		}
+			}
+		#endif
 	}
 #endif
 
