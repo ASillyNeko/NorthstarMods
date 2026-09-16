@@ -42,7 +42,7 @@
 			"name": "NSSetModEnabled",
 			"helpText": "",
 			"returnTypeString": "void",
-			"argTypes": "string modName, string modVersion, bool enabled"
+			"argTypes": "string modName, string modVersion, bool enabled, bool temp"
 		},
 		{
 			"name": "NSReloadMods",
@@ -266,7 +266,7 @@
 			"name": "NSSetModEnabled",
 			"helpText": "",
 			"returnTypeString": "void",
-			"argTypes": "string modName, string modVersion, bool enabled"
+			"argTypes": "string modName, string modVersion, bool enabled, bool temp"
 		},
 		{
 			"name": "NSReloadMods",
@@ -448,7 +448,7 @@
 			"name": "NSSetModEnabled",
 			"helpText": "",
 			"returnTypeString": "void",
-			"argTypes": "string modName, string modVersion, bool enabled"
+			"argTypes": "string modName, string modVersion, bool enabled, bool temp"
 		},
 		{
 			"name": "NSFetchVerifiedModsManifesto",
