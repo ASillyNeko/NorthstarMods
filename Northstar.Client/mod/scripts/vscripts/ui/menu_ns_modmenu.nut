@@ -199,7 +199,7 @@ void function OnModButtonPressed( var button )
 	}
 	else
 	{
-		NSSetModEnabled( modName, mod.version, !mod.enabled )
+		NSSetModEnabled( modName, mod.version, !mod.enabled, false )
 
 		// retrieve state of the mod that just got toggled
 		array<ModInfo> infos = NSGetModInformation( mod.name )
@@ -293,7 +293,7 @@ void function DisableMod()
 {
 	ModInfo mod = file.mods[ int( Hud_GetScriptID( Hud_GetParent( file.currentButton ) ) ) + file.scrollOffset - 1 ].mod
 	string modName = mod.name
-	NSSetModEnabled( modName, mod.version, false )
+	NSSetModEnabled( modName, mod.version, false, false )
 
 	// retrieve state of the mod that just got toggled
 	array<ModInfo> infos = NSGetModInformation( mod.name )

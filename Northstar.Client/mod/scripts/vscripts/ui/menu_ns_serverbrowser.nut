@@ -1202,7 +1202,7 @@ void function OnServerSelected_Threaded( string password = "" )
 
 		if ( !modNames.contains( requiredModInfo.name ) )
 		{
-			print( format( "\"%s\" was not found locally" + ( autoDownloadAllowed ? ", triggering manifesto fetching." : "." ), requiredModInfo.name ) )
+			printt( format( "\"%s\" was not found locally" + ( autoDownloadAllowed ? ", triggering manifesto fetching." : "." ), requiredModInfo.name ) )
 			uninstalledModFound = true
 			break
 		}
@@ -1212,12 +1212,12 @@ void function OnServerSelected_Threaded( string password = "" )
 
 			if ( !modVersions.contains( requiredModInfo.version ) )
 			{
-				print( format( "\"%s\" was found locally but has versions:", requiredModInfo.name ) )
+				printt( format( "\"%s\" was found locally but has versions:", requiredModInfo.name ) )
 				foreach ( string version in modVersions )
 				{
-					print( "    - " + version )
+					printt( "    - " + version )
 				}
-				print( format( "while server requires \"%s\"" + ( autoDownloadAllowed ? ", triggering manifesto fetching." : "." ), requiredModInfo.version ) )
+				printt( format( "while server requires \"%s\"" + ( autoDownloadAllowed ? ", triggering manifesto fetching." : "." ), requiredModInfo.version ) )
 				uninstalledModFound = true
 				break
 			}
@@ -1314,7 +1314,7 @@ void function ConnectToServer( bool modsChanged = false )
 				if ( mod.name == modName && ( IsCoreMod( modName ) || mod.version == modVersion ) )
 				{
 					found = true
-					print( format( "\"%s\" (v%s) is required and already enabled.", modName, modVersion ) )
+					printt( format( "\"%s\" (v%s) is required and already enabled.", modName, modVersion ) )
 					break
 				}
 			}
@@ -1322,8 +1322,8 @@ void function ConnectToServer( bool modsChanged = false )
 			if ( !found )
 			{
 				modsChanged = true
-				NSSetModEnabled( modName, modVersion, false )
-				print( format( "Disabled \"%s\" (v%s) since it's not required on server.", modName, modVersion ) )
+				NSSetModEnabled( modName, modVersion, false, true )
+				printt( format( "Disabled \"%s\" (v%s) since it's not required on server.", modName, modVersion ) )
 			}
 		}
 	}
@@ -1341,8 +1341,8 @@ void function ConnectToServer( bool modsChanged = false )
 			if ( !localModInfos[ 0 ].enabled )
 			{
 				modsChanged = true
-				NSSetModEnabled( modName, localModInfos[ 0 ].version, true )
-				print( format( "Enabled \"%s\" (v%s) to join server.", modName, localModInfos[ 0 ].version ) )
+				NSSetModEnabled( modName, localModInfos[ 0 ].version, true, true )
+				printt( format( "Enabled \"%s\" (v%s) to join server.", modName, localModInfos[ 0 ].version ) )
 			}
 		}
 		else
@@ -1352,8 +1352,8 @@ void function ConnectToServer( bool modsChanged = false )
 				if ( localMod.version == mod.version )
 				{
 					modsChanged = true
-					NSSetModEnabled( mod.name, mod.version, true )
-					print( format( "Enabled \"%s\" (v%s) to join server.", modName, modVersion ) )
+					NSSetModEnabled( mod.name, mod.version, true, true )
+					printt( format( "Enabled \"%s\" (v%s) to join server.", modName, modVersion ) )
 					break
 				}
 			}

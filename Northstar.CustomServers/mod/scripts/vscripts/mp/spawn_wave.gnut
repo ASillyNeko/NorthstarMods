@@ -2575,7 +2575,7 @@ void function Dev_ShowRoute( bool includedrones = false )
 			else if ( routename.tolower().find( "drone" ) || routename.tolower().find( "reaper" ) )
 				continue
 			else
-				thread GruntTracksPathing( routename )
+				thread SpectreTracksPathing( routename )
 		}
 	}
 	else
@@ -2586,12 +2586,12 @@ void function Dev_ShowRoute( bool includedrones = false )
 			if ( includedrones && routename.tolower().find( "drone" ) )
 				thread DroneTracksPathing( routename )
 			else
-				thread GruntTracksPathing( routename )
+				thread SpectreTracksPathing( routename )
 		}
 	}
 }
 
-void function GruntTracksPathing( string route )
+void function SpectreTracksPathing( string route )
 {
 	vector routeorigin = < 0, 0, 0 >
 	if ( useCustomFDLoad )
@@ -2599,7 +2599,7 @@ void function GruntTracksPathing( string route )
 	else
 		routeorigin = GetRouteStart( route ).GetOrigin()
 
-	entity guy = CreateSoldier( TEAM_MILITIA, routeorigin, < 0, 0, 0 > )
+	entity guy = CreateSpectre( TEAM_MILITIA, routeorigin, < 0, 0, 0 > )
 	DispatchSpawn( guy )
 	PlayLoopFXOnEntity( $"P_ar_holopilot_trail", guy, "CHESTFOCUS" )
 
@@ -2614,9 +2614,8 @@ void function GruntTracksPathing( string route )
 	{
 		thread NPCNav_FD( guy, route )
 		table result = guy.WaitSignal( "FD_ReachedHarvester" )
-		wait 5.0
 		if ( IsValid( guy ) )
-			guy.SetOrigin( routeorigin )
+			guy.Destroy() // guy.SetOrigin( routeorigin )
 	}
 }
 

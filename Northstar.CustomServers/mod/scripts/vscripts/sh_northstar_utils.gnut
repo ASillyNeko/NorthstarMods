@@ -27,7 +27,7 @@ void function NorthstarUtils_Before_Init()
 void function NorthstarUtils_After_Init()
 {
 	#if CLIENT
-		delaythread( 0.5 ) DisableRemoteMods()
+		delaythread( 0.5 ) DisableTempMods()
 	#endif
 }
 
@@ -76,7 +76,7 @@ void function ReloadMods( bool reloadOrRetry = false )
 }
 
 #if !SERVER
-	void function DisableRemoteMods()
+	void function DisableTempMods()
 	{
 		#if CLIENT
 			if ( !NSIsServerVMValid() )
@@ -93,12 +93,12 @@ void function ReloadMods( bool reloadOrRetry = false )
 
 		foreach ( ModInfo mod in mods )
 		{
-			if ( mod.isRemote && mod.enabled )
+			if ( mod.enabled != mod.enabledOld || ( mod.isRemote && mod.enabled ) )
 			{
 				string modName = mod.name
 				string modVersion = mod.version
 
-				NSSetModEnabled( modName, modVersion, false )
+				NSSetModEnabled( modName, modVersion, mod.enabled != mod.enabledOld ? mod.enabledOld : false, false )
 
 				reloadMods = true
 			}
@@ -109,8 +109,7 @@ void function ReloadMods( bool reloadOrRetry = false )
 			ReloadMods()
 
 			#if CLIENT
-				client.ClientCommand( "map " + GetMapName() )
-				client.ClientCommand( "uiscript_reset" )
+				client.ClientCommand( "map " + GetMapName() + "; uiscript_reset" )
 			#else
 				ClientCommand( "uiscript_reset" )
 			#endif

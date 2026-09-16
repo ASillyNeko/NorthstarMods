@@ -11,6 +11,7 @@ global function AddSpawnpointValidationRule
 global function CreateNoSpawnArea
 global function DeleteNoSpawnArea
 global function SpawnPointInNoSpawnArea
+global function IsSpawnpointValidDrop
 global function IsSpawnpointValid
 
 global function RateSpawnpoints_Generic
@@ -18,10 +19,6 @@ global function RateSpawnpoints_Directional
 global function RateSpawnpoints_Frontline
 global function RateSpawnpoints_SpawnZones
 global function DecideSpawnZone_Generic
-
-#if DEV
-	global function ShowSpawnPoints
-#endif
 
 global struct spawnZoneProperties
 {
@@ -351,7 +348,7 @@ entity function GetBestSpawnpoint( entity player, array<entity> spawnpoints, boo
 
 	if ( !validSpawns.len() )
 	{
-		printt( "Warning: No valid spawn points found for player: " + player + " trying to use all spawn points" )
+		Warning( "No valid spawn points found for player: " + player + " trying to use all spawn points" )
 		validSpawns.extend( spawnpoints )
 	}
 
@@ -692,63 +689,3 @@ int function SortPossibleZones( entity a, entity b )
 
 	return 0
 }
-
-/*
-██████  ███████ ██████  ██    ██  ██████   ██████  ██ ███    ██  ██████
-██   ██ ██      ██   ██ ██    ██ ██       ██       ██ ████   ██ ██
-██   ██ █████   ██████  ██    ██ ██   ███ ██   ███ ██ ██ ██  ██ ██   ███
-██   ██ ██      ██   ██ ██    ██ ██    ██ ██    ██ ██ ██  ██ ██ ██    ██
-██████  ███████ ██████   ██████   ██████   ██████  ██ ██   ████  ██████
-*/
-
-#if DEV
-	void function ShowSpawnPoints()
-	{
-		// big red = titan imc start spawns
-		// medium red = droppod imc start spawns
-		// small red = pilot imc start spawns
-		// big blue = titan militia start spawns
-		// medium blue = droppod militia start spawns
-		// small blue = pilot militia start spawns
-		// big yellow = titan spawns
-		// small yellow = pilot spawns
-		// black = droppod/reaper spawns
-		// green = droppod/reaper/dropship spawns
-
-		array<entity> spawnPoints = SpawnPoints_GetTitan()
-		foreach ( sPoint in spawnPoints )
-			DebugDrawSpawnpoint( sPoint, 255, 255, 0, false, 600 )
-
-		spawnPoints = SpawnPoints_GetPilot()
-		foreach ( sPoint in spawnPoints )
-			DebugDrawSpawnpoint( sPoint, 255, 255, 0, false, 600 )
-
-		spawnPoints = SpawnPoints_GetDropPod()
-		foreach ( sPoint in spawnPoints )
-			DebugDrawSpawnpoint( sPoint, 0, ( GetZiplineDropshipSpawns().contains( sPoint ) ? 255 : 0 ), 0, false, 600 )
-
-		spawnPoints = SpawnPoints_GetTitanStart( TEAM_IMC )
-		foreach ( sPoint in spawnPoints )
-			DebugDrawSpawnpoint( sPoint, 255, 0, 0, false, 600 )
-
-		spawnPoints = SpawnPoints_GetPilotStart( TEAM_IMC )
-		foreach ( sPoint in spawnPoints )
-			DebugDrawSpawnpoint( sPoint, 255, 0, 0, false, 600 )
-
-		spawnPoints = SpawnPoints_GetDropPodStart( TEAM_IMC )
-		foreach ( sPoint in spawnPoints )
-			DebugDrawSpawnpoint( sPoint, 255, 0, 0, false, 600 )
-
-		spawnPoints = SpawnPoints_GetTitanStart( TEAM_MILITIA )
-		foreach ( sPoint in spawnPoints )
-			DebugDrawSpawnpoint( sPoint, 0, 0, 255, false, 600 )
-
-		spawnPoints = SpawnPoints_GetPilotStart( TEAM_MILITIA )
-		foreach ( sPoint in spawnPoints )
-			DebugDrawSpawnpoint( sPoint, 0, 0, 255, false, 600 )
-
-		spawnPoints = SpawnPoints_GetDropPodStart( TEAM_MILITIA )
-		foreach ( sPoint in spawnPoints )
-			DebugDrawSpawnpoint( sPoint, 0, 0, 255, false, 600 )
-	}
-#endif

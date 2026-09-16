@@ -93,7 +93,7 @@ void function OnMainMenu_Open()
 	Signal( uiGlobal.signalDummy, "EndOnMainMenu_Open" )
 	EndSignal( uiGlobal.signalDummy, "EndOnMainMenu_Open" )
 
-	DisableRemoteMods()
+	DisableTempMods()
 
 	#if !VANILLA
 		SetConVarString( "communities_hostname", "" ) // disable communities due to crash exploits that are still possible through it
