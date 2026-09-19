@@ -60,7 +60,7 @@ void function ReloadMods( bool reloadOrRetry = false )
 	#else
 		ClientCommand( "reload_localization; loadPlaylists" )
 
-		if ( IsConnected() )
+		if ( IsFullyConnected() )
 			ClientCommand( "weapon_reparse; playerSettings_reparse; aisettings_reparse_client" )
 
 		if ( reloadOrRetry )
@@ -389,6 +389,22 @@ void function ReloadMods( bool reloadOrRetry = false )
 				IsMusicTrackPlaying( eMusicPieceID.LEVEL_LAST_MINUTE )
 			)
 				StopMusic()
+		}
+
+		// script_client thread SetFDDevPlaylistvars()
+		void function SetFDDevPlaylistvars()
+		{
+			while ( true )
+			{
+				GetLocalClientPlayer().ClientCommand(
+					"setplaylistvaroverrides override_boost_cost_burnmeter_harvester_shield 1 override_boost_cost_burnmeter_arc_trap 1 override_boost_cost_burnmeter_ap_turret_weapon_infinite 1 override_boost_cost_burnmeter_rodeo_grenade 1 override_boost_cost_burnmeter_amped_weapons_permanent 1 override_boost_cost_burnmeter_instant_battery 1 fd_harvester_regen_delay 0 fd_harvester_regen_time 0 riff_wave_spawn 0"
+				)
+				GetLocalClientPlayer().ClientCommand(
+					"setplaylistvaroverrides fd_money_per_round 5000 fd_titan_health_adjust -5000 fd_reaper_health_adjust -2000 fd_player_damage_scalar 1.0 fd_pro_titan_shields 0 fd_wave_buy_time 99999 pick_loadout_extension 0"
+				)
+
+				wait 0 // ignore server's frames
+			}
 		}
 	#endif
 #endif

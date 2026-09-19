@@ -3483,7 +3483,7 @@ string function Loadouts_GetSetFileForRequestedClass( entity player )
 			loadout.passive1 = GetCurrentPlaylistVarString( "pilot_loadout_passive1", "" )
 			loadout.passive2 = GetCurrentPlaylistVarString( "pilot_loadout_passive2", "" )
 
-			if ( GetConVarString( "mp_gamemode" ) == "coliseum" )
+			if ( GAMETYPE == "coliseum" )
 				loadout.setFile = GetSuitAndGenderBasedSetFile( "coliseum", loadout.race == RACE_HUMAN_FEMALE ? "female" : "male" )
 		}
 

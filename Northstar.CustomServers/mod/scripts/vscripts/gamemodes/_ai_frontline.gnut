@@ -131,14 +131,14 @@ entity function GetFrontlineSpawnPoint( array<entity> spawnPointArray, int team 
 
 	foreach ( entity spawnPoint in spawnPointArray )
 	{
-		if ( spawnPoint.s.frontlineRating == -100 )
+		if ( spawnPoint.s.rating == -100 )
 			continue
 
 		if ( ratedSpawnPoints.len() )
 		{
 			for ( int i = 0; i < ratedSpawnPoints.len(); i++ )
 			{
-				if ( spawnPoint.s.frontlineRating >= ratedSpawnPoints[ i ].s.frontlineRating )
+				if ( spawnPoint.s.rating >= ratedSpawnPoints[ i ].s.rating )
 				{
 					ratedSpawnPoints.insert( i, spawnPoint )
 					break
@@ -154,10 +154,10 @@ entity function GetFrontlineSpawnPoint( array<entity> spawnPointArray, int team 
 			return spawnPoint
 
 	if ( ratedSpawnPoints.len() )
-		return ratedSpawnPoints.getrandom()
+		return ratedSpawnPoints[ 0 ]
 
 	// we will always return a spawnpoint even if it's a bad one.
-	return spawnPointArray.getrandom()
+	return spawnPointArray[ 0 ]
 }
 
 void function SquadAssaultFrontline_Continuous( array<entity> guys )
@@ -210,7 +210,7 @@ void function RateFrontLineNPCSpawnpoint( entity spawnpoint, int team, vector ed
 
 	frontlineRating *= 2.0
 
-	spawnpoint.s.frontlineRating <- frontlineRating
+	spawnpoint.s.rating <- frontlineRating
 }
 
 void function InitFrontlineGroups()
@@ -797,13 +797,14 @@ void function SquadAssaultFrontline( array<entity> squad )
 
 	foreach ( entity npc in squad )
 	{
-		npc.AssaultPointClamped( assaultOrigin )
-
 		if ( goal.HasKey( "script_goal_radius" ) )
-			npc.AssaultSetGoalRadius( float( goal.kv.script_goal_radius ) )
+			npc.AssaultSetGoalRadius( int( goal.kv.script_goal_radius ) )
 
 		if ( goal.HasKey( "script_goal_height" ) )
-			npc.AssaultSetGoalHeight( float( goal.kv.script_goal_height ) )
+			npc.AssaultSetGoalHeight( int( goal.kv.script_goal_height ) )
+
+		npc.AssaultPoint( assaultOrigin )
+		npc.AssaultPointClamped( assaultOrigin )
 	}
 }
 

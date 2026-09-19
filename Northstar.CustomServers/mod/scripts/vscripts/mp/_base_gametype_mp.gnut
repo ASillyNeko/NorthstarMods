@@ -169,7 +169,7 @@ void function CodeCallback_OnClientConnectionCompleted( entity player )
 	if ( player.GetTeam() != TEAM_SPECTATOR && !IsPrivateMatchSpectator( player ) )
 		player.SetPersistentVar( "lastPlaylist", GetCurrentPlaylistName() )
 
-	if ( !IsFDMode( GetConVarString( "mp_gamemode" ) ) )
+	if ( GAMETYPE != FD )
 	{
 		// reset this for non-fd modes
 		// for some reason the postgame scoreboard uses this to

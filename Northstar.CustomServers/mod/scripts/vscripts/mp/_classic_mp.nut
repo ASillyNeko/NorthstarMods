@@ -313,8 +313,14 @@ void function RemovePlayerFromDropshipSpawnPlayerList( entity player )
 	if ( team == TEAM_SPECTATOR )
 		return
 
-	if ( file.dropshipSpawnPlayerList[ team ].contains( player ) )
-		file.dropshipSpawnPlayerList[ team ].removebyvalue( player )
+	for ( int i = 0; i < TEAM_COUNT; ++i )
+	{
+		array<entity> dropshipPlayers = file.dropshipSpawnPlayerList[ i ]
+
+		foreach ( entity dropshipPlayer in dropshipPlayers )
+			if ( dropshipPlayer == player )
+				file.dropshipSpawnPlayerList[ i ].removebyvalue( dropshipPlayer )
+	}
 }
 
 void function UpdateDropshipSpawnPlayerList()
@@ -641,6 +647,8 @@ void function SpawnPlayerIntoDropship( entity ship, entity player, FirstPersonSe
 				DeleteAnimEvent( player, "SkyScaleDefault" )
 
 				thread ClearWaveSpawnProtectionOnPrimaryAttackOrDelay( player, WAVESPAWN_PROTECTION_TIME )
+
+				DeployViewModelAndEnableWeapons( player )
 			}
 		}
 	)
@@ -676,7 +684,7 @@ void function SpawnPlayerIntoDropship( entity ship, entity player, FirstPersonSe
 			PlayBattleChatterLineOnlyToPlayer( otherPlayers.getrandom(), player, "bc_pIntroChat" )
 	#endif
 
-	thread PlayJumpoutAnims( player, ship, jumpAnim )
+	waitthread PlayJumpoutAnims( player, ship, jumpAnim )
 }
 
 void function DelayedWeaponDeploy( entity player )
@@ -726,8 +734,6 @@ void function PlayJumpoutAnims( entity player, entity ship, FirstPersonSequenceS
 
 		wait 0
 	}
-
-	DeployViewModelAndEnableWeapons( player )
 }
 
 bool function CanSpawnIntoIntroDropship( entity player )

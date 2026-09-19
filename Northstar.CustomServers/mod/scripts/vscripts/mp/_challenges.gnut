@@ -92,7 +92,7 @@ void function RegisterChallenges_OnMatchEnd()
 
 	bool eliteWarpaintRNG = false
 
-	if ( RandomIntRange( 0, 100 ) <= 30 ) // 30% Chance to trigger akin to vanilla, apply always since all players have paid cosmetics unlocked
+	if ( RandomInt( 100 ) <= 30 ) // 30% Chance to trigger akin to vanilla, apply always since all players have paid cosmetics unlocked
 		eliteWarpaintRNG = true
 
 	foreach ( player in GetPlayerArray() )

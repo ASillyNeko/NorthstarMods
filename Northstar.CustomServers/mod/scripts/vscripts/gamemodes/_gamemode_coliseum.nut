@@ -46,7 +46,7 @@ void function GamemodeColiseum_Init()
 	RunEpilogueWithDeadPlayers( true )
 
 	AddCallback_GameStateEnter( eGameState.Playing, IncreaseColiseumRoundsPlayed )
-	AddCallback_OnClientDisconnected( Coliseum_OnClientDisconnected )
+	AddCallback_UpdatePersistenceOnDisconnect( Coliseum_UpdatePersistence )
 }
 
 // stub function referenced in sh_gamemodes_mp
@@ -239,12 +239,16 @@ void function RunColiseumOutroThreaded( entity winningPlayer, entity losingPlaye
 void function IncreaseColiseumRoundsPlayed()
 {
 	foreach ( entity player in GetPlayerArray() )
-		file.roundsPlayed[ player ] <- ( player in file.roundsPlayed ? file.roundsPlayed[ player ] + 1 : 1 )
+		if ( !IsPrivateMatchSpectator( player ) )
+			file.roundsPlayed[ player ] <- ( player in file.roundsPlayed ? file.roundsPlayed[ player ] + 1 : 1 )
 }
 
-void function Coliseum_OnClientDisconnected( entity player )
+void function Coliseum_UpdatePersistence( entity player )
 {
-	if ( player in file.roundsPlayed && file.roundsPlayed[ player ] && GetGameState() < eGameState.Epilogue && file.roundsPlayed[ player ] <= minColiseumRounds )
+	if (
+		player in file.roundsPlayed && file.roundsPlayed[ player ] && GetGameState() < eGameState.Epilogue && file.roundsPlayed[ player ] <= minColiseumRounds &&
+		GetPlayerArrayOfTeam( GetOtherTeam( player.GetTeam() ) ).len()
+	)
 	{
 		if (
 			GetGameState() == eGameState.WinnerDetermined && GetWinningTeam() == player.GetTeam() &&
