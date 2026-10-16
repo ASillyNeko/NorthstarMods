@@ -223,7 +223,7 @@ void function CodeCallback_OnClientConnectionCompleted( entity player )
 		{
 			if ( IsValidPlayer( player ) )
 				DecideRespawnPlayer( player )
-		}
+		}()
 	}
 	else
 	{
@@ -242,7 +242,7 @@ void function CodeCallback_OnClientConnectionCompleted( entity player )
 				{
 					if ( IsValidPlayer( player ) )
 						DecideRespawnPlayer( player )
-				}
+				}()
 			}
 		}
 	}
