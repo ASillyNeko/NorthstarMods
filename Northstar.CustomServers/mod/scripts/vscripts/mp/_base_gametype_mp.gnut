@@ -219,7 +219,11 @@ void function CodeCallback_OnClientConnectionCompleted( entity player )
 	}
 	else if ( IsPrivateMatchSpectator( player ) )
 	{
-		delaythread( 0.25 ) DecideRespawnPlayer( player )
+		delaythread( 0.25 ) void function() : ( player )
+		{
+			if ( IsValidPlayer( player ) )
+				DecideRespawnPlayer( player )
+		}
 	}
 	else
 	{
@@ -229,9 +233,17 @@ void function CodeCallback_OnClientConnectionCompleted( entity player )
 		if ( GetGameState() >= eGameState.Playing )
 		{
 			if ( GetCurrentPlaylistVarInt( "tts_menu_join_in_progress", 0 ) == 1 )
+			{
 				thread SpectateTTSMenuPlayer( player )
+			}
 			else
-				delaythread( 0.25 ) DecideRespawnPlayer( player )
+			{
+				delaythread( 0.25 ) void function() : ( player )
+				{
+					if ( IsValidPlayer( player ) )
+						DecideRespawnPlayer( player )
+				}
+			}
 		}
 	}
 }
