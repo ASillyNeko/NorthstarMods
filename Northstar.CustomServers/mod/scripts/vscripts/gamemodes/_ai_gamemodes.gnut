@@ -10,6 +10,7 @@ global function GetReservedAISquadSlots
 global function ReserveAISlots
 global function ReleaseAISlots
 global function FreeAISlotOnDeath
+global function MoveAISlotOnLeeched
 global function ReserveSquadSlots
 global function ReleaseSquadSlots
 global function Spawn_TrackedGrunt
@@ -31,6 +32,10 @@ global function Spawn_TrackedDropPodSpectreSquad
 global function Spawn_TrackedDropPodStalkerSquad
 global function Spawn_TrackedWarpfallReaper
 global function Spawn_TrackedTitanfallTitan
+
+// 0 = don't handle, 1 = remove ai slot from old team, and 2 = remove ai slot from old team and add to new team
+// not sure which one vanilla does so this is why this is here
+const int SPECTRE_LEECHED_TYPE = 2
 
 struct
 {
@@ -191,6 +196,9 @@ void function SpawnFrontlineSquad( int team, int numFreeSlots )
 	{
 		npc.Minimap_AlwaysShow( TEAM_MILITIA, null )
 		npc.Minimap_AlwaysShow( TEAM_IMC, null )
+
+		if ( SPECTRE_LEECHED_TYPE == 2 && IsSpectre( npc ) )
+			thread MoveAISlotOnLeeched( npc )
 	}
 
 	// make the squad assault the correct frontline
@@ -552,18 +560,58 @@ void function FreeAISlotOnDeath( entity soldier )
 
 void function FreeAISlotOnDeathThread( entity soldier )
 {
-	soldier.EndSignal( "OnDestroy" )
+	EndSignal( soldier, "OnDestroy" )
 
 	int team = soldier.GetTeam() // wouldn't leeched spectres break team AI slot counts?
 
 	OnThreadEnd(
-		function() : ( team )
+		function() : ( soldier, team )
 		{
-			ReleaseAISlots( team )
+			if ( SPECTRE_LEECHED_TYPE != 2 || !IsSpectre( soldier ) )
+				ReleaseAISlots( team )
 		}
 	)
 
-	soldier.WaitSignal( "OnDeath" )
+	if ( SPECTRE_LEECHED_TYPE == 1 || SPECTRE_LEECHED_TYPE == 2 )
+	{
+		WaitSignal( soldier, "OnDeath", "OnLeeched" )
+		WaitEndFrame()
+	}
+	else
+		WaitSignal( soldier, "OnDeath" )
+}
+
+void function MoveAISlotOnLeeched( entity spectre )
+{
+	Assert( IsAlive( spectre ), spectre + " is not alive!" )
+	Assert( IsSpectre( spectre ), spectre + " is not a spectre!" )
+
+	thread MoveAISlotOnLeechedThread( spectre )
+}
+
+void function MoveAISlotOnLeechedThread( entity spectre )
+{
+	EndSignal( spectre, "OnDestroy", "OnDeath" )
+
+	int oldTeam = spectre.GetTeam()
+
+	OnThreadEnd(
+		function() : ( spectre )
+		{
+			ReleaseAISlots( spectre.GetTeam() )
+		}
+	)
+
+	while ( true )
+	{
+		WaitSignal( spectre, "OnLeeched" )
+
+		ReleaseAISlots( oldTeam )
+
+		oldTeam = spectre.GetTeam()
+
+		ReserveAISlots( oldTeam )
+	}
 }
 
 int function GetReservedSquadSize( string squadName )
