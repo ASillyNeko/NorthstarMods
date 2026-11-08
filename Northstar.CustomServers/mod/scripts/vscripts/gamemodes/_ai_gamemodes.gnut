@@ -183,7 +183,7 @@ void function SpawnFrontlineSquad( int team, int numFreeSlots )
 
 	if ( shouldSpawnReaper )
 		npcArray = Spawn_TrackedWarpfallReaper( team, 1, spawnPoint, squadName )
-	if ( shouldSpawnStalker )
+	else if ( shouldSpawnStalker )
 		npcArray = Spawn_TrackedDropPodStalkerSquad( team, SQUAD_SIZE, spawnPoint, squadName )
 	else if ( shouldSpawnSpectre )
 		npcArray = Spawn_TrackedDropPodSpectreSquad( team, SQUAD_SIZE, spawnPoint, squadName )
